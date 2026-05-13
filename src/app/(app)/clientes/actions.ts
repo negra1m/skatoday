@@ -16,6 +16,7 @@ import {
   updateClient,
 } from "@/db/crm";
 import { removeUploadedFile, saveUploadedFile } from "@/lib/uploads";
+import { linkClientProject, ownsClient, ownsProject, unlinkClientProject } from "@/db/projects";
 import type { NewClient } from "@/db/schema";
 
 async function requireAdmin() {
@@ -137,4 +138,26 @@ export async function deleteImageAction(formData: FormData) {
     if (removed?.filename) removeUploadedFile(removed.filename);
   }
   if (clientId) revalidatePath(`/clientes/${clientId}`);
+}
+
+export async function linkProjectAction(formData: FormData) {
+  const user = await requireAdmin();
+  const clientId = String(formData.get("clientId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  if (!clientId || !projectId) return;
+  if (!ownsClient(user.id, clientId) || !ownsProject(user.id, projectId)) return;
+  linkClientProject(clientId, projectId);
+  revalidatePath(`/clientes/${clientId}`);
+  revalidatePath(`/projetos/${projectId}`);
+}
+
+export async function unlinkProjectAction(formData: FormData) {
+  const user = await requireAdmin();
+  const clientId = String(formData.get("clientId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  if (!clientId || !projectId) return;
+  if (!ownsClient(user.id, clientId) || !ownsProject(user.id, projectId)) return;
+  unlinkClientProject(clientId, projectId);
+  revalidatePath(`/clientes/${clientId}`);
+  revalidatePath(`/projetos/${projectId}`);
 }

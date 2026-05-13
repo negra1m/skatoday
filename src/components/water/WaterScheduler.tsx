@@ -43,18 +43,17 @@ export function WaterScheduler({
   React.useEffect(() => {
     if (!notificationsEnabled) return;
     if (permission !== "granted") return;
+    let cleanup: (() => void) | undefined;
     registerSW().then(() => {
-      scheduleNotifications(schedule, goalMl, glassSizeMl).then(() => setScheduled(true));
+      scheduleNotifications(schedule, goalMl, glassSizeMl).then((res) => {
+        setScheduled(true);
+        // Polling SÓ se TimestampTrigger não suportado
+        if (!res.supported) {
+          cleanup = startPollingFallback({ schedule, goalMl, glassSizeMl });
+        }
+      });
     });
-    const cleanup = startPollingFallback({
-      schedule,
-      goalMl,
-      glassSizeMl,
-      onFire: () => {
-        // refresh é via revalidatePath nas server actions
-      },
-    });
-    return cleanup;
+    return () => cleanup?.();
   }, [notificationsEnabled, permission, schedule, goalMl, glassSizeMl]);
 
   async function enable() {

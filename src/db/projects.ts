@@ -1,6 +1,57 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db, schema } from "./client";
 import type { NewProject } from "./schema";
+
+// ---- N:N client_projects ----
+
+export function listClientsOfProject(projectId: string) {
+  return db
+    .select({
+      id: schema.clients.id,
+      name: schema.clients.name,
+      company: schema.clients.company,
+      status: schema.clients.status,
+    })
+    .from(schema.clientProjects)
+    .innerJoin(schema.clients, eq(schema.clients.id, schema.clientProjects.clientId))
+    .where(eq(schema.clientProjects.projectId, projectId))
+    .orderBy(asc(schema.clients.name))
+    .all();
+}
+
+export function listProjectsOfClient(clientId: string) {
+  return db
+    .select({
+      id: schema.projects.id,
+      name: schema.projects.name,
+      color: schema.projects.color,
+      archivedAt: schema.projects.archivedAt,
+    })
+    .from(schema.clientProjects)
+    .innerJoin(schema.projects, eq(schema.projects.id, schema.clientProjects.projectId))
+    .where(eq(schema.clientProjects.clientId, clientId))
+    .orderBy(asc(schema.projects.name))
+    .all();
+}
+
+export function linkClientProject(clientId: string, projectId: string) {
+  try {
+    db.insert(schema.clientProjects).values({ clientId, projectId }).run();
+  } catch {
+    // já vinculado — ignora
+  }
+}
+
+export function unlinkClientProject(clientId: string, projectId: string) {
+  db.delete(schema.clientProjects)
+    .where(
+      and(
+        eq(schema.clientProjects.clientId, clientId),
+        eq(schema.clientProjects.projectId, projectId),
+      ),
+    )
+    .run();
+}
 
 export function listProjects(userId: string, includeArchived = false) {
   const filter = includeArchived
@@ -96,4 +147,30 @@ export function projectStats(userId: string, profileId: string) {
     }
   }
   return { projects: projs, statsByName: map, today };
+}
+
+export function getProjectById(userId: string, projectId: string) {
+  return db
+    .select()
+    .from(schema.projects)
+    .where(and(eq(schema.projects.id, projectId), eq(schema.projects.userId, userId)))
+    .get();
+}
+
+export function ownsClient(userId: string, clientId: string): boolean {
+  const c = db
+    .select({ id: schema.clients.id })
+    .from(schema.clients)
+    .where(and(eq(schema.clients.id, clientId), eq(schema.clients.userId, userId)))
+    .get();
+  return !!c;
+}
+
+export function ownsProject(userId: string, projectId: string): boolean {
+  const p = db
+    .select({ id: schema.projects.id })
+    .from(schema.projects)
+    .where(and(eq(schema.projects.id, projectId), eq(schema.projects.userId, userId)))
+    .get();
+  return !!p;
 }

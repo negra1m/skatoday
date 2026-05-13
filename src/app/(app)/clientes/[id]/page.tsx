@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ExternalLink, Key, Link as LinkIcon, ImageIcon } from "lucide-react";
+import { ExternalLink, Key, Link as LinkIcon, ImageIcon, FolderKanban } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getClient } from "@/db/crm";
+import { listActiveProjectNames, listProjects, listProjectsOfClient } from "@/db/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,8 @@ import {
   deleteImageAction,
   deleteLinkAction,
   deleteSecretAction,
+  linkProjectAction,
+  unlinkProjectAction,
   updateClientAction,
   uploadImageAction,
 } from "../actions";
@@ -30,6 +33,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const data = getClient(user.id, id);
   if (!data) notFound();
   const { client, secrets, links, images } = data;
+  const linkedProjects = listProjectsOfClient(client.id);
+  const allUserProjects = listProjects(user.id);
+  const linkedIds = new Set(linkedProjects.map((p) => p.id));
+  const availableProjects = allUserProjects.filter((p) => !linkedIds.has(p.id) && !p.archivedAt);
 
   return (
     <div className="space-y-4">
@@ -96,6 +103,70 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               Salvar
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Projetos vinculados */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FolderKanban className="h-4 w-4" /> Projetos · {linkedProjects.length}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {linkedProjects.length > 0 && (
+            <div className="space-y-1">
+              {linkedProjects.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2"
+                >
+                  <Link href={`/projetos/${p.id}`} className="flex min-w-0 flex-1 items-center gap-2 text-sm hover:text-foreground">
+                    <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{p.name}</span>
+                    {p.archivedAt && (
+                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">arq</span>
+                    )}
+                  </Link>
+                  <form action={unlinkProjectAction}>
+                    <input type="hidden" name="clientId" value={client.id} />
+                    <input type="hidden" name="projectId" value={p.id} />
+                    <button
+                      type="submit"
+                      className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+                      aria-label="Desvincular"
+                    >
+                      ×
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+          {availableProjects.length > 0 ? (
+            <form action={linkProjectAction} className="flex gap-2">
+              <input type="hidden" name="clientId" value={client.id} />
+              <Select name="projectId" required defaultValue="" className="flex-1">
+                <option value="" disabled>
+                  Vincular projeto...
+                </option>
+                {availableProjects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </Select>
+              <Button type="submit" size="sm">
+                +
+              </Button>
+            </form>
+          ) : (
+            <p className="text-[10px] text-muted-foreground">
+              {allUserProjects.length === 0
+                ? "Crie projetos em /projetos pra vincular."
+                : "Todos os projetos já estão vinculados."}
+            </p>
+          )}
         </CardContent>
       </Card>
 

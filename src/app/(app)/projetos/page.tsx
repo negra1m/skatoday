@@ -62,7 +62,7 @@ export default async function ProjetosPage() {
                 confirmMessage={`Deletar projeto "${p.name}"? Tarefas associadas mantém o nome mas viram órfãs.`}
               >
                 <Link
-                  href={`/tarefas?project=${encodeURIComponent(p.name)}`}
+                  href={`/projetos/${p.id}`}
                   className="block border border-border bg-card px-3 py-3"
                 >
                   <div className="flex items-center justify-between gap-2">

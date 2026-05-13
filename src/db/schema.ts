@@ -327,6 +327,25 @@ export type ClientSecret = typeof clientSecrets.$inferSelect;
 export type ClientLink = typeof clientLinks.$inferSelect;
 export type ClientImage = typeof clientImages.$inferSelect;
 
+// N:N entre clientes e projetos
+export const clientProjects = sqliteTable(
+  "client_projects",
+  {
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    pk: uniqueIndex("client_projects_pk").on(table.clientId, table.projectId),
+  }),
+);
+
+export type ClientProject = typeof clientProjects.$inferSelect;
+
 export type Trick = typeof tricks.$inferSelect;
 export type NewTrick = typeof tricks.$inferInsert;
 export type SkateSession = typeof skateSessions.$inferSelect;
