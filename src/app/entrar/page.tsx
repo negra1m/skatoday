@@ -8,7 +8,6 @@ import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LOCALE_FLAG } from "@/lib/i18n/dict";
 
 async function signIn(formData: FormData) {
   "use server";
@@ -100,9 +99,8 @@ export default async function EntrarPage({
         </div>
       </div>
 
-      <footer className="mt-12 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-        <span className="text-base leading-none">{LOCALE_FLAG["pt-BR"]}</span>
-        <span>{t("app.maker")}</span>
+      <footer className="mt-12 text-[10px] uppercase tracking-widest text-muted-foreground">
+        {t("app.maker")}
       </footer>
     </main>
   );

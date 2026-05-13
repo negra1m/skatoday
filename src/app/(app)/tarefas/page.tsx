@@ -58,7 +58,7 @@ export default async function TarefasPage({
 
       <Card>
         <CardContent className="py-4">
-          <TaskFilters />
+          <TaskFilters projects={projectOptions} />
         </CardContent>
       </Card>
 

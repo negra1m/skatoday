@@ -1,5 +1,0 @@
-@schema=trick.v1
-@fields=id,name,category,stance,level,status,total_xp,base_requirement
-@categories=[flat,fakie,rampa,corrimao,borda,manual,freestyle,transicao]
-@stances=[regular,fakie,switch,nollie]
-@statuses=[descobrindo,aprendendo,quase,na_base,arsenal,pausada]

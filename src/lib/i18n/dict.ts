@@ -19,7 +19,7 @@ export const DICT = {
   "pt-BR": {
     "app.title": "skatoday",
     "app.tagline": "painel pessoal",
-    "app.maker": "Feito no Brasil pela Few Company",
+    "app.maker": "Open source — AGPL-3.0",
     "auth.signin": "Entrar",
     "auth.signup": "Criar conta",
     "auth.username": "Usuário",
@@ -56,7 +56,7 @@ export const DICT = {
   en: {
     "app.title": "skatoday",
     "app.tagline": "personal dashboard",
-    "app.maker": "Made in Brazil by Few Company",
+    "app.maker": "Open source — AGPL-3.0",
     "auth.signin": "Sign in",
     "auth.signup": "Sign up",
     "auth.username": "Username",
@@ -93,7 +93,7 @@ export const DICT = {
   "zh-CN": {
     "app.title": "skatoday",
     "app.tagline": "个人仪表盘",
-    "app.maker": "由 Few Company 在巴西制造",
+    "app.maker": "开源 — AGPL-3.0",
     "auth.signin": "登录",
     "auth.signup": "注册",
     "auth.username": "用户名",

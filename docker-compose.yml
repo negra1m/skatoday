@@ -13,13 +13,16 @@ services:
       - JWT_SECRET=${JWT_SECRET:?defina JWT_SECRET no .env}
       - SECRETS_KEY=${SECRETS_KEY:?defina SECRETS_KEY no .env}
       - UPLOADS_DIR=${UPLOADS_DIR:-/app/data/uploads}
-      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-https://agenda.fewcompany.com}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-http://localhost:3000}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
-      - SMTP_FROM=${SMTP_FROM:-skatoday@fewcompany.com}
+      - SMTP_FROM=${SMTP_FROM:-skatoday@localhost}
       - SMTP_SECURE=${SMTP_SECURE:-false}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-mailto:admin@localhost}
     expose:
       - "3000"
 

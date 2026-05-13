@@ -1,24 +1,3 @@
-// Ordem reflete prioridade Few. Os 5 primeiros são foco atual; o resto vem depois.
-export const FEW_PROJECTS = [
-  "iFIGHT",
-  "Archradar",
-  "AppResente",
-  "Sentinel",
-  "skatoday",
-  "Sentinel PWA",
-  "Sentinel Agent",
-  "oAuth Few",
-  "Email Manager",
-  "Paulinho Poker",
-  "LibreIC",
-  "Pede Aqui!",
-  "OndeTá",
-  "ICAE",
-  "INIEC",
-] as const;
-
-export type FewProject = (typeof FEW_PROJECTS)[number];
-
 export const PRIORITIES = ["urgent", "next", "stable", "planned"] as const;
 export type Priority = (typeof PRIORITIES)[number];
 

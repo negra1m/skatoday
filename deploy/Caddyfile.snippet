@@ -1,7 +1,7 @@
-# Adicionar ao Caddyfile global da VPS Few
-# Substitui o bloco antigo de agenda.fewcompany.com (Agenda Few legado)
+# Caddy reverse proxy block for skatoday.
+# Replace `your-domain.com` and merge into your existing Caddyfile.
 
-agenda.fewcompany.com {
+your-domain.com {
     encode zstd gzip
     reverse_proxy skatoday:3000 {
         header_up Host {host}
@@ -11,12 +11,10 @@ agenda.fewcompany.com {
     }
 
     header {
-        # Security
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
         Referrer-Policy "no-referrer-when-downgrade"
-        # PWA
         -Server
     }
 }

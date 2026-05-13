@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { FEW_PROJECTS, PRIORITIES, PRIORITY_LABEL } from "@/lib/projects";
+import { PRIORITIES, PRIORITY_LABEL } from "@/lib/projects";
 
-export function TaskFilters() {
+export function TaskFilters({ projects = [] }: { projects?: string[] }) {
   const router = useRouter();
   const params = useSearchParams();
   const project = params.get("project") ?? "";
@@ -53,7 +53,7 @@ export function TaskFilters() {
 
       <div className="flex flex-wrap gap-1.5">
         <Chip label="Todos" active={!project} onClick={() => setParam("project", null)} />
-        {FEW_PROJECTS.map((p) => (
+        {projects.map((p) => (
           <Chip key={p} label={p} active={project === p} onClick={() => setParam("project", p)} />
         ))}
       </div>

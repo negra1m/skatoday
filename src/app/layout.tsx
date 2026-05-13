@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { FEW_WATERMARK } from "@/lib/watermark";
 
 export const metadata: Metadata = {
-  title: `skatoday${FEW_WATERMARK}`,
-  description: "HUD pessoal de skate, corpo e rotina",
+  title: "skatoday",
+  description: "Personal dashboard for skate, body, tasks and habits",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

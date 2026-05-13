@@ -1,4 +1,0 @@
-@schema=session.v1
-@fields=id,date,duration_minutes,location,session_type,feeling,confidence,pain,flow_state,notes
-@types=[flow,tech,livre]
-@flow_states=[travado,ok,fluido,absurdo]

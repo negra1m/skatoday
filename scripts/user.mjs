@@ -68,7 +68,7 @@ async function reset(username) {
   db.prepare(
     "INSERT INTO password_resets (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
   ).run(uuid(), user.id, tokenHash, expiresAt);
-  const base = process.env.PUBLIC_BASE_URL ?? "https://agenda.fewcompany.com";
+  const base = process.env.PUBLIC_BASE_URL ?? "http://localhost:3000";
   console.log(`ok: link de reset (válido 1h)`);
   console.log(`${base}/redefinir?token=${token}`);
   console.log(`(envia esse link pro usuário — admin não vê a senha)`);

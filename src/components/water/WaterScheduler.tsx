@@ -1,15 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { buildSchedule, nextScheduledTime } from "@/lib/water";
 import {
-  registerSW,
-  requestPermission,
-  scheduleNotifications,
-  startPollingFallback,
-} from "@/lib/water-notifications";
+  getCurrentPushSubscription,
+  subscribePush,
+  unsubscribePush,
+  testPush,
+} from "@/lib/push-client";
 
 export function WaterScheduler({
   goalMl,
@@ -24,8 +25,10 @@ export function WaterScheduler({
   wakeEnd: string;
   notificationsEnabled: boolean;
 }) {
-  const [permission, setPermission] = React.useState<NotificationPermission | "unsupported">("default");
-  const [scheduled, setScheduled] = React.useState(false);
+  const [subscribed, setSubscribed] = React.useState<boolean | null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const [msg, setMsg] = React.useState<string | null>(null);
+
   const schedule = React.useMemo(
     () => buildSchedule({ goalMl, glassSizeMl, wakeStart, wakeEnd }),
     [goalMl, glassSizeMl, wakeStart, wakeEnd],
@@ -33,35 +36,40 @@ export function WaterScheduler({
   const nextTime = React.useMemo(() => nextScheduledTime(schedule), [schedule]);
 
   React.useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setPermission("unsupported");
-      return;
-    }
-    setPermission(Notification.permission);
+    getCurrentPushSubscription().then((s) => setSubscribed(!!s));
   }, []);
 
-  React.useEffect(() => {
-    if (!notificationsEnabled) return;
-    if (permission !== "granted") return;
-    let cleanup: (() => void) | undefined;
-    registerSW().then(() => {
-      scheduleNotifications(schedule, goalMl, glassSizeMl).then((res) => {
-        setScheduled(true);
-        // Polling SÓ se TimestampTrigger não suportado
-        if (!res.supported) {
-          cleanup = startPollingFallback({ schedule, goalMl, glassSizeMl });
-        }
-      });
-    });
-    return () => cleanup?.();
-  }, [notificationsEnabled, permission, schedule, goalMl, glassSizeMl]);
-
-  async function enable() {
-    const perm = await requestPermission();
-    setPermission(perm);
+  async function handleSubscribe() {
+    setBusy(true);
+    setMsg(null);
+    const res = await subscribePush();
+    if (res.ok) {
+      setSubscribed(true);
+      setMsg("Notificações ativadas! Os lembretes vão chegar mesmo com o app fechado.");
+    } else {
+      setMsg(`Falhou: ${res.error}`);
+    }
+    setBusy(false);
   }
 
-  if (permission === "unsupported") {
+  async function handleUnsubscribe() {
+    setBusy(true);
+    setMsg(null);
+    await unsubscribePush();
+    setSubscribed(false);
+    setMsg("Notificações desativadas.");
+    setBusy(false);
+  }
+
+  async function handleTest() {
+    setBusy(true);
+    setMsg(null);
+    const res = await testPush();
+    setMsg(res.ok ? "Push de teste enviado." : `Falhou: ${res.error}`);
+    setBusy(false);
+  }
+
+  if (typeof window !== "undefined" && !("Notification" in window)) {
     return (
       <Card>
         <CardContent className="py-3 text-center text-xs text-muted-foreground">
@@ -75,36 +83,29 @@ export function WaterScheduler({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          {notificationsEnabled && permission === "granted" ? (
-            <Bell className="h-4 w-4" />
-          ) : (
-            <BellOff className="h-4 w-4" />
-          )}
+          {subscribed ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
           Lembretes
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {permission === "default" && (
-          <button
-            type="button"
-            onClick={enable}
-            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-          >
-            Ativar notificações
-          </button>
-        )}
-        {permission === "denied" && (
-          <p className="text-xs text-destructive">
-            Notificações bloqueadas no navegador. Habilite nas configurações.
+      <CardContent className="space-y-3">
+        {!notificationsEnabled && (
+          <p className="text-xs text-muted-foreground">
+            Notificações desativadas nas configurações abaixo.
           </p>
         )}
-        {permission === "granted" && notificationsEnabled && (
+
+        {notificationsEnabled && subscribed === false && (
+          <Button onClick={handleSubscribe} disabled={busy} className="w-full">
+            {busy ? "..." : "Ativar notificações"}
+          </Button>
+        )}
+
+        {notificationsEnabled && subscribed === true && (
           <>
             <p className="text-xs text-muted-foreground">
-              {scheduled ? "Agendado" : "Agendando..."} ·{" "}
-              {nextTime ? `próximo: ${nextTime}` : "nenhum horário restante hoje"}
+              Ativo · {nextTime ? `próximo: ${nextTime}` : "nenhum horário restante hoje"}
             </p>
-            <div className="flex flex-wrap gap-1 pt-1">
+            <div className="flex flex-wrap gap-1">
               {schedule.map((t) => (
                 <span
                   key={t}
@@ -114,13 +115,18 @@ export function WaterScheduler({
                 </span>
               ))}
             </div>
+            <div className="flex gap-2">
+              <Button onClick={handleTest} disabled={busy} variant="outline" size="sm" className="flex-1">
+                <Send className="h-3.5 w-3.5" /> Testar
+              </Button>
+              <Button onClick={handleUnsubscribe} disabled={busy} variant="outline" size="sm" className="flex-1">
+                Desativar
+              </Button>
+            </div>
           </>
         )}
-        {permission === "granted" && !notificationsEnabled && (
-          <p className="text-xs text-muted-foreground">
-            Notificações desativadas. Ative em "Configuração" abaixo.
-          </p>
-        )}
+
+        {msg && <p className="text-xs text-muted-foreground">{msg}</p>}
       </CardContent>
     </Card>
   );

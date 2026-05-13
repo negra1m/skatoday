@@ -1,171 +1,110 @@
-# Deploy skatoday → agenda.fewcompany.com
+# Deploy guide
 
-Migração big bang: substitui o app Agenda Few legado pelo skatoday novo.
-Sub-domínio mantém: `agenda.fewcompany.com`.
+## Prerequisites
 
-## Pré-requisitos VPS
+- Docker + Docker Compose on the VPS
+- A reverse proxy (Caddy, Nginx, Traefik) — examples below use Caddy
+- An external Docker network: `docker network create app_net`
+- A domain pointing to your VPS
 
-- Docker + Docker Compose
-- Network externa `app_net` já existe
-- Caddy rodando como reverse proxy no host
-
-## 1. Backup do estado atual da VPS
+## 1. Generate secrets
 
 ```bash
-ssh -i "C:/Users/vnsn_/.ssh/few-server_key.pem" fewcompany@agent.fewcompany.com
-
-# Backup do tasks.json
-sudo cp /home/fewcompany/apps/few-server/apps/agenda/data/tasks.json \
-        /home/fewcompany/backup/tasks_$(date +%Y%m%d_%H%M).json
-
-# Backup do container antigo (caso precise rollback rápido)
-docker ps -a | grep agenda
-docker commit agenda agenda-legacy-$(date +%Y%m%d)
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+# Run twice — one for JWT_SECRET, one for SECRETS_KEY
 ```
 
-## 2. Migração local (recomendado) ANTES de deploy
-
-Local, testa a migração:
-
-```powershell
-cd "C:\Users\vnsn_\Documents\Few\_projetos\8.APP\_Tools\skatoday"
-
-# Baixa o tasks.json da VPS
-scp -i "C:/Users/vnsn_/.ssh/few-server_key.pem" `
-    fewcompany@agent.fewcompany.com:/home/fewcompany/apps/few-server/apps/agenda/data/tasks.json `
-    data/import/tasks.json
-
-# Dry-run (gera relatório, NÃO insere)
-npm run db:import-agenda
-
-# Revisa data/import/migration-report.json
-# Em especial: semanticSuspects (pares que parecem duplicados)
-
-# Se ok, importa de verdade
-npm run db:import-agenda:commit
-
-# Testa local
-npm run dev
-```
-
-## 3. Deploy do container novo
-
-Na VPS:
+Generate VAPID keys for Web Push:
 
 ```bash
-# Clona o repo
-cd /home/fewcompany/apps
-git clone <url-skatoday> skatoday
-cd skatoday
+npx web-push generate-vapid-keys
+```
 
-# Cria .env (mesmas vars do .env.local)
-# JWT_SECRET = gerar com: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+## 2. Server setup
+
+```bash
+git clone <this-repo> /opt/skatoday
+cd /opt/skatoday
+
 cat > .env <<EOF
-JWT_SECRET=<gerar-um-novo>
-PUBLIC_BASE_URL=https://agenda.fewcompany.com
-SMTP_HOST=mail.fewcompany.com
+JWT_SECRET=<48-byte-random>
+SECRETS_KEY=<48-byte-random>
+PUBLIC_BASE_URL=https://your-domain.com
+
+SMTP_HOST=mail.example.com
 SMTP_PORT=587
-SMTP_FROM=skatoday@fewcompany.com
+SMTP_FROM=skatoday@example.com
+
+VAPID_PUBLIC_KEY=<from generate-vapid-keys>
+VAPID_PRIVATE_KEY=<from generate-vapid-keys>
+VAPID_SUBJECT=mailto:you@example.com
 EOF
 
-# Build + up
 docker compose build
 docker compose up -d
-
-# Verifica
 docker compose logs -f skatoday
-docker ps | grep skatoday
 ```
 
-## 4. Caddy
+## 3. Reverse proxy
 
-Atualiza o Caddyfile do host pra apontar `agenda.fewcompany.com` pro container novo.
-Usa o snippet em `deploy/Caddyfile.snippet`.
+See `deploy/Caddyfile.snippet` for a Caddy example. For Nginx/Traefik:
+
+- Proxy to `skatoday:3000` on the `app_net` network
+- TLS termination handled by your proxy
+
+## 4. Web Push cron
+
+Real notifications (Chrome/Android + iOS PWA) require a cron that runs every minute on the host:
 
 ```bash
-sudo nano /etc/caddy/Caddyfile
-# substitui o bloco antigo de agenda.fewcompany.com pelo snippet
-sudo systemctl reload caddy
-```
-
-## 5. Importar tasks.json (caso não migrou local)
-
-Copia tasks.json pra dentro do container e roda o import:
-
-```bash
-docker cp /home/fewcompany/backup/tasks_<TIMESTAMP>.json \
-          skatoday:/app/data/import/tasks.json
-
-docker compose exec skatoday node_modules/.bin/tsx src/db/migrate-from-agenda.ts
-# revisa /app/data/import/migration-report.json
-docker compose exec skatoday cat /app/data/import/migration-report.json | less
-
-# se ok:
-docker compose exec skatoday node_modules/.bin/tsx src/db/migrate-from-agenda.ts --commit
-```
-
-## 6. Smoke test
-
-```
-https://agenda.fewcompany.com
-→ tela /entrar
-→ login com username/senha (criar admin antes: npm run user:create)
-→ dashboard com tasks urgentes
-→ /tarefas mostra tudo migrado
-→ /projetos lista 14 projetos
-→ /skate (vazio mas funciona)
-```
-
-## 7. Apaga o legado
-
-Depois de validar 1-2 dias:
-
-```bash
-docker stop agenda && docker rm agenda
-docker volume ls | grep agenda
-# remove volume antigo se quiser:
-# docker volume rm agenda_data
-```
-
-## Backup automático do .db
-
-Script: `deploy/backup.sh` — faz snapshot do banco dentro do container, copia comprimido pra `/home/fewcompany/backup/skatoday/`, e remove backups com mais de 30 dias.
-
-Instalação:
-
-```bash
-# 1. Tornar executável
-chmod +x /home/fewcompany/apps/skatoday/deploy/backup.sh
-
-# 2. Criar pasta de backups
-mkdir -p /home/fewcompany/backup/skatoday
-
-# 3. Testar manualmente
-/home/fewcompany/apps/skatoday/deploy/backup.sh
-
-# 4. Adicionar ao crontab (ver deploy/crontab.txt)
 crontab -e
-# Cola a linha do crontab.txt
 ```
 
-Restaurar de um backup:
+Add:
+
+```cron
+* * * * * /opt/skatoday/deploy/push-cron.sh >> /var/log/skatoday-push.log 2>&1
+```
+
+The script invokes `docker exec skatoday node /app/scripts/push-water.mjs` which checks every user's hydration schedule and sends Web Push only at the exact minute.
+
+## 5. First user
+
+The first signup at `/cadastrar` becomes admin automatically. Or create from the host:
 
 ```bash
-# Para o container
-docker compose -f /home/fewcompany/apps/skatoday/docker-compose.yml down
-
-# Descomprime backup pro lugar
-gunzip -c /home/fewcompany/backup/skatoday/skatoday-20260520_033000.db.gz > \
-          /var/lib/docker/volumes/skatoday_skatoday_data/_data/skatoday.db
-
-# Sobe de novo
-docker compose -f /home/fewcompany/apps/skatoday/docker-compose.yml up -d
+docker exec -it skatoday node scripts/user.mjs create <username> <email> <password>
 ```
 
-## Rollback rápido (caso deploy quebre)
+## 6. Backups
+
+Daily SQLite backup script: `deploy/backup.sh` (snapshots to `/var/backups/skatoday/`, gzip, 30-day retention).
+
+```bash
+chmod +x /opt/skatoday/deploy/backup.sh
+crontab -e
+```
+
+```cron
+30 3 * * * /opt/skatoday/deploy/backup.sh >> /var/log/skatoday-backup.log 2>&1
+```
+
+To restore:
 
 ```bash
 docker compose down
-docker run -d --name agenda-legacy <imagem-snapshot>
-# update Caddyfile temporariamente apontando pro container antigo
+gunzip -c /var/backups/skatoday/skatoday-<timestamp>.db.gz > \
+  /var/lib/docker/volumes/skatoday_skatoday_data/_data/skatoday.db
+docker compose up -d
 ```
+
+## 7. Updates
+
+```bash
+cd /opt/skatoday
+git pull
+docker compose build
+docker compose up -d
+```
+
+Migrations apply automatically on container start (see `scripts/entrypoint.sh`).

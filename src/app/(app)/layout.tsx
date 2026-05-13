@@ -3,7 +3,6 @@ import { getCurrentSession } from "@/lib/auth";
 import { BottomNav } from "@/components/hud/BottomNav";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { getLocale, getT } from "@/lib/i18n/server";
-import { LOCALE_FLAG } from "@/lib/i18n/dict";
 
 async function logout() {
   "use server";
@@ -45,8 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <BottomNav isAdmin={session.user.role === "admin"} />
       <footer className="fixed bottom-16 left-0 right-0 z-10 pointer-events-none flex justify-center pb-1">
         <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[9px] uppercase tracking-widest text-muted-foreground backdrop-blur">
-          <span className="text-xs leading-none">{LOCALE_FLAG["pt-BR"]}</span>
-          <span>Few Company</span>
+          <span>skatoday</span>
         </div>
       </footer>
     </div>

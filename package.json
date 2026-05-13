@@ -2,7 +2,7 @@
   "name": "skatoday",
   "version": "0.1.0",
   "private": true,
-  "description": "HUD pessoal de skate, corpo e rotina — voltar ao eixo sem virar planilha triste de coach",
+  "description": "Personal dashboard for skate, body, tasks and habits",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,18 +12,15 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seed.ts",
-    "db:import-agenda": "tsx src/db/migrate-from-agenda.ts",
-    "db:import-agenda:commit": "tsx src/db/migrate-from-agenda.ts --commit",
     "user:create": "tsx src/db/cli-users.ts create",
     "user:list": "tsx src/db/cli-users.ts list",
     "user:reset": "tsx src/db/cli-users.ts reset",
     "user:delete": "tsx src/db/cli-users.ts delete",
-    "user:promote": "tsx src/db/cli-users.ts promote",
-    "db:link-profiles": "tsx src/db/link-profile-to-user.ts"
+    "user:promote": "tsx src/db/cli-users.ts promote"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.0",
+    "@types/web-push": "^3.6.4",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^11.5.0",
     "class-variance-authority": "^0.7.0",
@@ -38,6 +35,7 @@
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

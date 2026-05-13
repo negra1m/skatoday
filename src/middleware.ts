@@ -16,6 +16,10 @@ export function middleware(req: NextRequest) {
   }
   const token = req.cookies.get("skatoday_session")?.value;
   if (!token) {
+    // Pra rotas /api: retorna 401 JSON em vez de redirect (evita CORS + redirect em fetch)
+    if (path.startsWith("/api/")) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/entrar", req.url));
   }
   return NextResponse.next();

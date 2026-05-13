@@ -30,7 +30,7 @@ function getTransporter() {
 
 export async function sendMail(opts: MailOpts) {
   const t = getTransporter();
-  const from = process.env.SMTP_FROM ?? "skatoday@fewcompany.com";
+  const from = process.env.SMTP_FROM ?? "skatoday@localhost";
 
   if (!t) {
     console.log("[mail:dev] —— sem SMTP_HOST configurado, simulando envio ——");
@@ -79,7 +79,7 @@ ${url}
 
 Se você não pediu isso, ignore este email — sua senha continua a mesma.
 
-Few Company · skatoday`,
+— skatoday`,
   },
   en: {
     subject: "skatoday — Password reset",
@@ -93,7 +93,7 @@ ${url}
 
 If you didn't request this, ignore this email — your password stays the same.
 
-Few Company · skatoday`,
+— skatoday`,
   },
   "zh-CN": {
     subject: "skatoday — 重置密码",
@@ -107,6 +107,6 @@ ${url}
 
 如果不是您本人操作，请忽略此邮件。
 
-Few Company · skatoday`,
+— skatoday`,
   },
 } as const;

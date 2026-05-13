@@ -30,7 +30,7 @@ async function requestReset(formData: FormData) {
 
   if (user) {
     const token = createResetRequest(user.id);
-    const base = process.env.PUBLIC_BASE_URL ?? "https://agenda.fewcompany.com";
+    const base = process.env.PUBLIC_BASE_URL ?? "http://localhost:3000";
     const resetUrl = `${base}/redefinir?token=${token}`;
     const email = buildResetEmail({
       username: user.username,

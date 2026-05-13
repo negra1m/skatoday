@@ -98,7 +98,7 @@ async function reset(username?: string) {
     process.exit(1);
   }
   const token = createResetRequest(user.id);
-  const base = process.env.PUBLIC_BASE_URL ?? "https://agenda.fewcompany.com";
+  const base = process.env.PUBLIC_BASE_URL ?? "http://localhost:3000";
   const resetUrl = `${base}/redefinir?token=${token}`;
   const mail = buildResetEmail({ username: user.username, resetUrl, locale: user.locale });
   await sendMail({ to: user.email, ...mail });

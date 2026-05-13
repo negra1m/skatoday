@@ -346,6 +346,28 @@ export const clientProjects = sqliteTable(
 
 export type ClientProject = typeof clientProjects.$inferSelect;
 
+// Web Push subscriptions (VAPID) — pra notificações reais com PWA fechado.
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastUsedAt: text("last_used_at"),
+  },
+  (table) => ({
+    uniqEndpoint: uniqueIndex("push_subscriptions_endpoint").on(table.endpoint),
+  }),
+);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
 export type Trick = typeof tricks.$inferSelect;
 export type NewTrick = typeof tricks.$inferInsert;
 export type SkateSession = typeof skateSessions.$inferSelect;

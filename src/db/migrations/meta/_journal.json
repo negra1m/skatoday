@@ -57,6 +57,13 @@
       "when": 1778703132680,
       "tag": "0007_amused_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1778705372659,
+      "tag": "0008_concerned_namora",
+      "breakpoints": true
     }
   ]
 }

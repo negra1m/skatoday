@@ -1,67 +1,128 @@
 # skatoday
 
-HUD pessoal Few Company. Substitui Agenda Few + serve de tracker de skate, corpo e rotina.
+Personal dashboard for skate, tasks, habits and clients. Self-hosted, single user per instance, multi-user supported.
+
+> Painel pessoal de skate, tarefas, hábitos e clientes. Self-hosted, single user por instância, suporte multi-user.
+
+## Features
+
+- **Tasks** — Project-grouped task list with priority, deadline, filters, search and voice capture.
+- **Projects (N:N)** — Users define their own projects. Clients can be linked to projects.
+- **Skate tracking** — Trick arsenal with XP, sessions, flow gauge, daily score, GitHub-style streak map.
+- **Body / Runs / Jiu / Routine** — Logs with edit, delete and history.
+- **Water (hydration)** — Daily goal (auto from weight or manual), scheduled reminders, real Web Push notifications.
+- **Clients (CRM, admin only)** — Contacts, encrypted password vault (AES-256-GCM), links, images.
+- **Auth** — Username + password (bcrypt) with JWT session cookie. Self-service signup, password reset via email.
+- **i18n** — pt-BR, en, zh-CN.
+- **PWA** — Installable on mobile, dark theme, neon accent.
 
 ## Stack
 
 - Next.js 15 (App Router) + TypeScript
-- SQLite (better-sqlite3) + Drizzle ORM — banco local em `data/skatoday.db`
-- Tailwind + componentes UI custom
-- PWA via manifest.json
-- Auth: código de acesso único via `.env` (cookie httpOnly)
+- SQLite (better-sqlite3) + Drizzle ORM
+- Tailwind CSS + custom UI primitives
+- bcryptjs + jose (JWT)
+- web-push (VAPID) + Service Worker
+- nodemailer (SMTP for password resets)
+- Docker + Caddy for deploy
 
-## Setup local
+## Setup
 
 ```bash
 npm install --legacy-peer-deps
 cp .env.local.example .env.local
-# edita .env.local: define ACCESS_CODE e ACCESS_HINT
+# Generate secrets:
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+# Fill JWT_SECRET and SECRETS_KEY in .env.local
+
 npm run db:generate
 npm run db:migrate
-npm run db:seed
 npm run dev
 ```
 
-Acessa em http://localhost:3000 — entra com o código do `.env`.
+First user that signs up at `/cadastrar` becomes admin automatically.
+
+## Environment
+
+```
+DATABASE_URL=file:./data/skatoday.db
+JWT_SECRET=<48-byte random base64url>
+SECRETS_KEY=<48-byte random base64url>  # used by client vault
+PUBLIC_BASE_URL=http://localhost:3000
+UPLOADS_DIR=./data/uploads
+
+# SMTP (optional in dev — logs to stdout when not set)
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+
+# Web Push (VAPID). Generate keys with: npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com
+```
 
 ## Scripts
 
-- `npm run dev` — Next dev
-- `npm run build` — build de produção
-- `npm run start` — start de produção
-- `npm run type-check` — checagem TS
-- `npm run db:generate` — gera SQL de migration
-- `npm run db:migrate` — aplica migrations
-- `npm run db:seed` — popula profile + tricks base
-- `npm run db:studio` — Drizzle Studio
-- `npm run db:import-agenda` — dry-run da migração tasks.json (Agenda Few)
-- `npm run db:import-agenda:commit` — importa tasks.json no banco
+```
+npm run dev               # Next.js dev server
+npm run build             # production build
+npm run start             # production server
+npm run type-check        # tsc --noEmit
 
-## Páginas
+npm run db:generate       # generate SQL migration from schema
+npm run db:migrate        # apply migrations
+npm run db:studio         # Drizzle Studio
 
-- `/` — Dashboard (HUD): score do dia, streak skate, tasks urgentes, mapa do mês
-- `/tarefas` — Lista de tasks com filtros, busca, voice, modal (compat Agenda Few)
-- `/projetos` — Visão por projeto Few (14 projetos)
-- `/skate` — Arsenal de tricks por status
-- `/skate/sessao` — Registrar sessão do dia
-- `/skate/trick/[id]` — Detalhe + histórico
-- `/eu` — Hub pessoal: corpo, corrida, jiu, rotina
-- `/corpo`, `/corrida`, `/jiu`, `/rotina` — Logs individuais
+npm run user:create       # <username> <email> <password>
+npm run user:list
+npm run user:reset        # <username> — sends reset email
+npm run user:delete       # <username>
+npm run user:promote      # <username> — make admin
+```
 
-## Deploy → agenda.fewcompany.com
+## Pages
 
-Ver `deploy/DEPLOY.md` pra passo-a-passo completo.
+| Route | Description |
+|---|---|
+| `/` | Dashboard with score, streak, urgent tasks |
+| `/tarefas` | Tasks with filters, search, voice input |
+| `/projetos` | Projects (user-managed) |
+| `/projetos/[id]` | Project detail: linked clients + open tasks |
+| `/skate` | Trick arsenal grouped by status |
+| `/skate/sessao` | Log today's skate session |
+| `/skate/trick/[id]` | Trick detail with history |
+| `/agua` | Hydration tracker with push notifications |
+| `/corpo` | Body log with weight evolution chart |
+| `/corrida` | Running log |
+| `/jiu` | Jiu-jitsu log (admin only) |
+| `/rotina` | Daily routine checklist |
+| `/eu` | Personal hub (body/runs/water/routine) |
+| `/clientes` | CRM (admin only) |
+| `/clientes/[id]` | Client detail: vault, links, images, linked projects |
+| `/entrar` `/cadastrar` `/esqueci-senha` `/redefinir` | Auth pages |
 
-Resumo do cutover:
-1. Local: testa migração de `tasks.json` (dry-run → review → commit)
-2. VPS: backup `tasks.json` atual, `docker compose up -d skatoday`
-3. Caddy: atualiza bloco `agenda.fewcompany.com` pro container `skatoday`
-4. Smoke test → apaga container `agenda` legado
+## Deploy
 
-## Princípios
+See `deploy/DEPLOY.md` for full guide including Caddy reverse proxy, backups, and Web Push cron setup.
 
-- Anti-coach motivacional. Painel operacional, não rede social fitness.
-- Foco em flow, consistência, intimidade com o movimento.
-- Andy Anderson > escada/ollie.
-- Usuário NÃO é sedentário — é atleta desorganizado voltando ao eixo.
-- Tarefas substituem Agenda Few. 14 projetos Few suportados.
+Quick steps:
+
+```bash
+# On VPS
+git clone <this-repo> /home/<user>/apps/skatoday
+cd /home/<user>/apps/skatoday
+# Create .env with secrets
+docker compose build
+docker compose up -d
+
+# Web Push cron (runs every minute)
+crontab -e
+# Add: * * * * * /path/to/skatoday/deploy/push-cron.sh
+```
+
+## License
+
+AGPL-3.0

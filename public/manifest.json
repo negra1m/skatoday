@@ -1,7 +1,7 @@
 {
   "name": "skatoday",
   "short_name": "skatoday",
-  "description": "HUD pessoal de skate, corpo e rotina",
+  "description": "Personal dashboard for skate, body, tasks and habits",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0b",
