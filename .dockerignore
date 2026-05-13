@@ -1,0 +1,14 @@
+node_modules
+.next
+data
+.env.local
+.env
+.git
+.gitignore
+.vscode
+.idea
+*.log
+README.md
+TODO.md
+CLAUDE.md
+data/import

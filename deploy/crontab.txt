@@ -1,0 +1,7 @@
+# Crontab pra backup diário do skatoday.db
+# Instalar no host da VPS Few:
+#   crontab -e
+# Adicionar a linha abaixo:
+
+# Backup às 03:30 todo dia (horário de Brasília — VPS já deve estar em America/Sao_Paulo)
+30 3 * * * /home/fewcompany/apps/skatoday/deploy/backup.sh >> /home/fewcompany/backup/skatoday/backup.log 2>&1

@@ -1,0 +1,22 @@
+# Adicionar ao Caddyfile global da VPS Few
+# Substitui o bloco antigo de agenda.fewcompany.com (Agenda Few legado)
+
+agenda.fewcompany.com {
+    encode zstd gzip
+    reverse_proxy skatoday:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        # Security
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "no-referrer-when-downgrade"
+        # PWA
+        -Server
+    }
+}

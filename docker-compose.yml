@@ -1,0 +1,23 @@
+services:
+  skatoday:
+    build: .
+    container_name: skatoday
+    restart: unless-stopped
+    networks:
+      - app_net
+    volumes:
+      - skatoday_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./data/skatoday.db
+      - ACCESS_CODE=${ACCESS_CODE:?defina ACCESS_CODE no .env}
+      - ACCESS_HINT=${ACCESS_HINT:-}
+    expose:
+      - "3000"
+
+networks:
+  app_net:
+    external: true
+
+volumes:
+  skatoday_data:
