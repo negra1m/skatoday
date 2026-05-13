@@ -193,6 +193,63 @@ export const tasks = sqliteTable("tasks", {
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 
+export const clients = sqliteTable("clients", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  company: text("company"),
+  email: text("email"),
+  phone: text("phone"),
+  notes: text("notes"),
+  status: text("status", { enum: ["lead", "ativo", "concluido", "pausado", "perdido"] })
+    .notNull()
+    .default("lead"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const clientSecrets = sqliteTable("client_secrets", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  username: text("username"),
+  // AES-256-GCM: iv (base64) + tag (base64) + cipher (base64), separados por ":"
+  ciphertext: text("ciphertext").notNull(),
+  url: text("url"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const clientLinks = sqliteTable("client_links", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const clientImages = sqliteTable("client_images", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  filename: text("filename").notNull(),  // nome do arquivo no volume /app/data/uploads
+  caption: text("caption"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type Client = typeof clients.$inferSelect;
+export type NewClient = typeof clients.$inferInsert;
+export type ClientSecret = typeof clientSecrets.$inferSelect;
+export type ClientLink = typeof clientLinks.$inferSelect;
+export type ClientImage = typeof clientImages.$inferSelect;
+
 export type Trick = typeof tricks.$inferSelect;
 export type NewTrick = typeof tricks.$inferInsert;
 export type SkateSession = typeof skateSessions.$inferSelect;

@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Home, ListChecks, FolderKanban, User } from "lucide-react";
+import { Activity, Briefcase, Home, ListChecks, FolderKanban, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ITEMS = [
+type Item = { href: string; icon: typeof Home; label: string };
+
+const ITEMS_USER: Item[] = [
   { href: "/", icon: Home, label: "HUD" },
   { href: "/tarefas", icon: ListChecks, label: "Tarefas" },
   { href: "/skate", icon: Activity, label: "Skate" },
@@ -13,12 +15,21 @@ const ITEMS = [
   { href: "/eu", icon: User, label: "Eu" },
 ];
 
-export function BottomNav() {
+const ITEMS_ADMIN: Item[] = [
+  { href: "/", icon: Home, label: "HUD" },
+  { href: "/tarefas", icon: ListChecks, label: "Tarefas" },
+  { href: "/skate", icon: Activity, label: "Skate" },
+  { href: "/clientes", icon: Briefcase, label: "Clientes" },
+  { href: "/eu", icon: User, label: "Eu" },
+];
+
+export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const path = usePathname();
+  const items = isAdmin ? ITEMS_ADMIN : ITEMS_USER;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur">
       <ul className="mx-auto grid max-w-md grid-cols-5">
-        {ITEMS.map((it) => {
+        {items.map((it) => {
           const active = path === it.href || (it.href !== "/" && path.startsWith(it.href));
           const Icon = it.icon;
           return (

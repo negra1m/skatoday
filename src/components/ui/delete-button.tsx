@@ -7,11 +7,13 @@ export function DeleteButton({
   id,
   message = "Deletar esse registro?",
   size = "sm",
+  extraFields,
 }: {
   action: (formData: FormData) => Promise<void>;
   id: string;
   message?: string;
   size?: "sm" | "md";
+  extraFields?: Record<string, string>;
 }) {
   return (
     <form
@@ -22,6 +24,10 @@ export function DeleteButton({
       className="inline-flex"
     >
       <input type="hidden" name="id" value={id} />
+      {extraFields &&
+        Object.entries(extraFields).map(([k, v]) => (
+          <input key={k} type="hidden" name={k} value={v} />
+        ))}
       <button
         type="submit"
         aria-label="Deletar"

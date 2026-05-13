@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <div className="px-4 pb-6">{children}</div>
-      <BottomNav />
+      <BottomNav isAdmin={session.user.role === "admin"} />
       <footer className="fixed bottom-16 left-0 right-0 z-10 pointer-events-none flex justify-center pb-1">
         <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[9px] uppercase tracking-widest text-muted-foreground backdrop-blur">
           <span className="text-xs leading-none">{LOCALE_FLAG["pt-BR"]}</span>
