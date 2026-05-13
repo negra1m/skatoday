@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 export default async function EditJiuPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const s = (await getCurrentSession())!;
+  if (s.user.role !== "admin") notFound();
   const j = db
     .select()
     .from(schema.jiuSessions)

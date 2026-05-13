@@ -29,6 +29,10 @@ async function save(formData: FormData) {
 
 export default async function JiuPage() {
   const s = (await getCurrentSession())!;
+  if (s.user.role !== "admin") {
+    const { notFound } = await import("next/navigation");
+    notFound();
+  }
   const sessions = listJiu(s.profile.id);
 
   return (

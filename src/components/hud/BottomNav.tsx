@@ -18,8 +18,8 @@ const ITEMS_USER: Item[] = [
 const ITEMS_ADMIN: Item[] = [
   { href: "/", icon: Home, label: "HUD" },
   { href: "/tarefas", icon: ListChecks, label: "Tarefas" },
-  { href: "/skate", icon: Activity, label: "Skate" },
   { href: "/clientes", icon: Briefcase, label: "Clientes" },
+  { href: "/projetos", icon: FolderKanban, label: "Projetos" },
   { href: "/eu", icon: User, label: "Eu" },
 ];
 

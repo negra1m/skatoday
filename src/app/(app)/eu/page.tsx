@@ -1,16 +1,29 @@
 import Link from "next/link";
-import { Dumbbell, Footprints, Swords, ListChecks } from "lucide-react";
-import { getCurrentSession } from "@/lib/session";
+import { Dumbbell, Footprints, Swords, ListChecks, Activity } from "lucide-react";
+import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function EuPage() {
   const s = (await getCurrentSession())!;
+  const isAdmin = s.user.role === "admin";
   const body = latestBodyLog(s.profile.id);
   const runs = listRuns(s.profile.id);
-  const jiu = listJiu(s.profile.id);
+  const jiu = isAdmin ? listJiu(s.profile.id) : [];
 
-  const sections = [
+  const sections: Array<{ href: string; icon: typeof Dumbbell; label: string; hint: string }> = [];
+
+  // Pro admin, Skate fica acessível via /eu (não está no BottomNav admin)
+  if (isAdmin) {
+    sections.push({
+      href: "/skate",
+      icon: Activity,
+      label: "Skate",
+      hint: "Arsenal · Sessão · Tricks",
+    });
+  }
+
+  sections.push(
     {
       href: "/corpo",
       icon: Dumbbell,
@@ -23,19 +36,23 @@ export default async function EuPage() {
       label: "Corrida",
       hint: runs[0] ? `${runs[0].distanceKm}km · ${runs[0].date}` : "Sem corridas ainda",
     },
-    {
+  );
+
+  if (isAdmin) {
+    sections.push({
       href: "/jiu",
       icon: Swords,
       label: "Jiu",
       hint: jiu[0] ? `${jiu[0].durationMinutes}min · ${jiu[0].date}` : "Sem treinos ainda",
-    },
-    {
-      href: "/rotina",
-      icon: ListChecks,
-      label: "Rotina do dia",
-      hint: "Tarefas da casa + treino",
-    },
-  ];
+    });
+  }
+
+  sections.push({
+    href: "/rotina",
+    icon: ListChecks,
+    label: "Rotina do dia",
+    hint: "Tarefas da casa + treino",
+  });
 
   return (
     <div className="space-y-4">
