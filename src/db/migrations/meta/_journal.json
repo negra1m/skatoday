@@ -43,6 +43,13 @@
       "when": 1778696961519,
       "tag": "0005_remarkable_triathlon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778701211098,
+      "tag": "0006_striped_mercury",
+      "breakpoints": true
     }
   ]
 }

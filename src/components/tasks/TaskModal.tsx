@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceCapture } from "./VoiceCapture";
-import { FEW_PROJECTS, PRIORITIES, PRIORITY_LABEL } from "@/lib/projects";
+import { PRIORITIES, PRIORITY_LABEL } from "@/lib/projects";
 import type { Task } from "@/db/schema";
 
 type Props = {
@@ -18,6 +18,7 @@ type Props = {
   action: (formData: FormData) => Promise<void>;
   trigger?: React.ReactNode;
   defaultProject?: string;
+  projectOptions: string[];
   controlledOpen?: boolean;
   onClose?: () => void;
 };
@@ -28,6 +29,7 @@ export function TaskModal({
   action,
   trigger,
   defaultProject,
+  projectOptions,
   controlledOpen,
   onClose,
 }: Props) {
@@ -112,13 +114,30 @@ export function TaskModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="project">Projeto</Label>
-              <Select id="project" name="project" defaultValue={task?.project ?? defaultProject ?? "skatoday"}>
-                {FEW_PROJECTS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </Select>
+              {projectOptions.length === 0 ? (
+                <input
+                  type="hidden"
+                  name="project"
+                  value={task?.project ?? defaultProject ?? "geral"}
+                />
+              ) : (
+                <Select
+                  id="project"
+                  name="project"
+                  defaultValue={task?.project ?? defaultProject ?? projectOptions[0]}
+                >
+                  {projectOptions.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              {projectOptions.length === 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  Crie projetos em /projetos pra escolher
+                </p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="priority">Prioridade</Label>

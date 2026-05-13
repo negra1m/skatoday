@@ -15,9 +15,10 @@ import { StreakMap } from "@/components/hud/StreakMap";
 import { FlowGauge } from "@/components/hud/FlowGauge";
 import { DailyScore } from "@/components/hud/DailyScore";
 import { TaskCard } from "@/components/tasks/TaskCard";
+import { listActiveProjectNames } from "@/db/projects";
 import { computeStreak, dailyScore } from "@/lib/xp";
 import { todayISO } from "@/lib/utils";
-import { ROUTINE_TASKS } from "@/lib/routine";
+import { listRoutineItems } from "@/db/routine";
 
 export default async function DashboardPage() {
   const session = (await getCurrentSession())!;
@@ -34,9 +35,10 @@ export default async function DashboardPage() {
   const todaySession = getSessionByDate(session.profile.id, today);
   const body = latestBodyLog(session.profile.id);
   const routine = listRoutineForDate(session.profile.id, today);
-  const routinePct = routine.length === 0
+  const routineItems = listRoutineItems(session.user.id);
+  const routinePct = routineItems.length === 0
     ? 0
-    : routine.filter((r) => r.done).length / ROUTINE_TASKS.length;
+    : routine.filter((r) => r.done).length / routineItems.length;
   const runs = listRuns(session.profile.id);
   const jiu = listJiu(session.profile.id);
   const ranToday = runs.some((r) => r.date === today);
@@ -53,6 +55,7 @@ export default async function DashboardPage() {
   const streak = computeStreak(monthSessions.map((s) => s.date));
   const urgent = urgentTasks(session.profile.id, 5);
   const tStats = taskStats(session.profile.id);
+  const projectOptions = listActiveProjectNames(session.user.id);
 
   return (
     <div className="space-y-4">
@@ -89,7 +92,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {urgent.map((t) => (
-              <TaskCard key={t.id} task={t} />
+              <TaskCard key={t.id} task={t} projectOptions={projectOptions} />
             ))}
           </CardContent>
         </Card>

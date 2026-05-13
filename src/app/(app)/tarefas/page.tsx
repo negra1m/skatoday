@@ -1,5 +1,6 @@
 import { getCurrentSession } from "@/lib/session";
 import { listTasks, taskStats, type TaskFilters as TF } from "@/db/queries";
+import { listActiveProjectNames } from "@/db/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskFilters } from "@/components/tasks/TaskFilters";
@@ -24,6 +25,7 @@ export default async function TarefasPage({
   };
   const tasks = listTasks(session.profile.id, filters);
   const stats = taskStats(session.profile.id);
+  const projectOptions = listActiveProjectNames(session.user.id);
 
   const grouped = !filters.priority
     ? PRIORITIES.map((p) => ({ priority: p, items: tasks.filter((t) => t.priority === p) }))
@@ -36,6 +38,7 @@ export default async function TarefasPage({
         <TaskModal
           mode="create"
           action={createTaskAction}
+          projectOptions={projectOptions}
           trigger={
             <Button type="button" size="sm">
               <Plus className="h-4 w-4" /> Nova
@@ -77,7 +80,7 @@ export default async function TarefasPage({
               </CardHeader>
               <CardContent className="space-y-2">
                 {g.items.map((t) => (
-                  <TaskCard key={t.id} task={t} />
+                  <TaskCard key={t.id} task={t} projectOptions={projectOptions} />
                 ))}
               </CardContent>
             </Card>
@@ -86,7 +89,7 @@ export default async function TarefasPage({
       ) : (
         <div className="space-y-2">
           {tasks.map((t) => (
-            <TaskCard key={t.id} task={t} />
+            <TaskCard key={t.id} task={t} projectOptions={projectOptions} />
           ))}
         </div>
       )}

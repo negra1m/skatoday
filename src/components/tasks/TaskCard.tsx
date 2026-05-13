@@ -16,7 +16,7 @@ import {
 } from "@/app/(app)/tarefas/actions";
 import { invokeAction } from "@/lib/form-action";
 
-export function TaskCard({ task }: { task: Task }) {
+export function TaskCard({ task, projectOptions = [] }: { task: Task; projectOptions?: string[] }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
   const overdue = !!task.deadline && task.deadline < today && !task.done;
@@ -96,23 +96,15 @@ export function TaskCard({ task }: { task: Task }) {
 
       {/* Modal controlado externo, aberto quando swipe-edit dispara */}
       {editOpen && (
-        <TaskModalController
+        <TaskModal
+          mode="edit"
           task={task}
+          action={updateTaskAction}
+          projectOptions={projectOptions}
+          controlledOpen
           onClose={() => setEditOpen(false)}
         />
       )}
     </>
-  );
-}
-
-function TaskModalController({ task, onClose }: { task: Task; onClose: () => void }) {
-  return (
-    <TaskModal
-      mode="edit"
-      task={task}
-      action={updateTaskAction}
-      controlledOpen
-      onClose={onClose}
-    />
   );
 }

@@ -193,6 +193,47 @@ export const tasks = sqliteTable("tasks", {
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 
+export const projects = sqliteTable(
+  "projects",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color"),
+    archivedAt: text("archived_at"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqUserName: uniqueIndex("projects_user_name").on(table.userId, table.name),
+  }),
+);
+
+export const routineItems = sqliteTable(
+  "routine_items",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    archivedAt: text("archived_at"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqUserKey: uniqueIndex("routine_items_user_key").on(table.userId, table.key),
+  }),
+);
+
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
+export type RoutineItem = typeof routineItems.$inferSelect;
+export type NewRoutineItem = typeof routineItems.$inferInsert;
+
 export const waterConfigs = sqliteTable("water_configs", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   profileId: text("profile_id")
