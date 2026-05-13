@@ -43,8 +43,14 @@ export default async function EntrarPage({
   const t = await getT();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 pt-12">
-      <div className="absolute right-4 top-4">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center px-6"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)" }}
+    >
+      <div
+        className="absolute right-4"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+      >
         <LocaleSwitcher current={locale} />
       </div>
 

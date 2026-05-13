@@ -193,6 +193,42 @@ export const tasks = sqliteTable("tasks", {
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 
+export const waterConfigs = sqliteTable("water_configs", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  profileId: text("profile_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" })
+    .unique(),
+  goalMl: integer("goal_ml"),           // null = auto-calculado pelo peso
+  glassSizeMl: integer("glass_size_ml").notNull().default(250),
+  wakeStart: text("wake_start").notNull().default("08:00"),
+  wakeEnd: text("wake_end").notNull().default("22:00"),
+  notificationsEnabled: integer("notifications_enabled", { mode: "boolean" }).notNull().default(true),
+  soundEnabled: integer("sound_enabled", { mode: "boolean" }).notNull().default(true),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const waterLogs = sqliteTable(
+  "water_logs",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    glassesDrunk: integer("glasses_drunk").notNull().default(0),
+    mlDrunk: integer("ml_drunk").notNull().default(0),
+    goalMlSnapshot: integer("goal_ml_snapshot"),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqProfileDate: uniqueIndex("water_logs_profile_date").on(table.profileId, table.date),
+  }),
+);
+
+export type WaterConfig = typeof waterConfigs.$inferSelect;
+export type WaterLog = typeof waterLogs.$inferSelect;
+
 export const clients = sqliteTable("clients", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")

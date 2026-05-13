@@ -21,7 +21,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="mx-auto max-w-md min-h-screen pb-20">
-      <header className="flex items-center justify-between px-4 pt-6 pb-3">
+      <header
+        className="flex items-center justify-between px-4 pb-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1.25rem)" }}
+      >
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("app.title")}</p>
           <p className="text-hud text-sm">{session.user.username}</p>

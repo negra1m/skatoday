@@ -53,7 +53,10 @@ export default async function EsqueciSenhaPage({
   await getLocale();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 pt-12">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center px-6"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)" }}
+    >
       <div className="w-full max-w-sm space-y-8">
         <header className="space-y-1 text-center">
           <h1 className="text-hud text-2xl font-semibold tracking-wider">{t("auth.reset.title")}</h1>

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Dumbbell, Footprints, Swords, ListChecks, Activity } from "lucide-react";
+import { Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
+import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default async function EuPage() {
@@ -10,6 +11,10 @@ export default async function EuPage() {
   const body = latestBodyLog(s.profile.id);
   const runs = listRuns(s.profile.id);
   const jiu = isAdmin ? listJiu(s.profile.id) : [];
+  const today = new Date().toISOString().slice(0, 10);
+  const waterGoalMl = getEffectiveGoalMl(s.profile.id);
+  const waterLog = getWaterLogForDate(s.profile.id, today);
+  const waterPct = Math.min(100, Math.round(((waterLog?.mlDrunk ?? 0) / waterGoalMl) * 100));
 
   const sections: Array<{ href: string; icon: typeof Dumbbell; label: string; hint: string }> = [];
 
@@ -29,6 +34,12 @@ export default async function EuPage() {
       icon: Dumbbell,
       label: "Corpo",
       hint: body ? `${body.weightKg ?? "—"}kg · ${body.date}` : "Sem logs ainda",
+    },
+    {
+      href: "/agua",
+      icon: Droplet,
+      label: "Água",
+      hint: `${((waterLog?.mlDrunk ?? 0) / 1000).toFixed(2)}L / ${(waterGoalMl / 1000).toFixed(1)}L · ${waterPct}%`,
     },
     {
       href: "/corrida",
