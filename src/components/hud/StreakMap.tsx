@@ -5,6 +5,15 @@ type Cell = {
   intensity: 0 | 1 | 2 | 3 | 4;
 };
 
+// Tons de roxo neon Few (escala estilo GitHub contributions, mas em roxo)
+const INTENSITY_STYLE: Record<Cell["intensity"], string> = {
+  0: "bg-[hsl(268_25%_12%/_0.6)]",
+  1: "bg-[hsl(268_50%_28%)]",
+  2: "bg-[hsl(268_70%_45%)]",
+  3: "bg-[hsl(268_85%_60%)]",
+  4: "bg-[hsl(268_92%_72%)] shadow-[0_0_8px_hsl(268_92%_72%/_0.6)]",
+};
+
 export function StreakMap({ cells, year, month }: { cells: Cell[]; year: number; month: number }) {
   const first = new Date(year, month - 1, 1);
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -26,12 +35,8 @@ export function StreakMap({ cells, year, month }: { cells: Cell[]; year: number;
             key={i}
             title={c.date}
             className={cn(
-              "aspect-square rounded-sm border border-border",
-              c.intensity === 0 && "bg-muted/30",
-              c.intensity === 1 && "bg-muted",
-              c.intensity === 2 && "bg-zinc-500",
-              c.intensity === 3 && "bg-zinc-300",
-              c.intensity === 4 && "bg-white",
+              "aspect-square rounded-sm border border-border/50",
+              INTENSITY_STYLE[c.intensity],
             )}
           />
         ) : (
