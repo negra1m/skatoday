@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/tasks/TaskCard";
-import { LogSwipeRow } from "@/components/ui/log-swipe-row";
+import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 import { listActiveProjectNames } from "@/db/projects";
 import {
   archiveProjectAction,
-  deleteProjectAction,
   unarchiveProjectAction,
   updateProjectAction,
 } from "../actions";
@@ -85,20 +84,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </Button>
               </form>
             )}
-            <form
-              action={deleteProjectAction}
-              className="flex-1"
-              onSubmit={(e) => {
-                if (!confirm(`Deletar "${project.name}"? Tarefas mantêm o nome mas viram órfãs.`)) {
-                  e.preventDefault();
-                }
-              }}
-            >
-              <input type="hidden" name="id" value={project.id} />
-              <Button type="submit" variant="destructive" className="w-full">
-                Deletar
-              </Button>
-            </form>
+            <DeleteProjectButton id={project.id} name={project.name} />
           </div>
         </CardContent>
       </Card>
