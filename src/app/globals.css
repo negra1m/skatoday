@@ -84,7 +84,7 @@
     pointer-events: none;
   }
 
-  /* Barra neon Few — fina, no topo absoluto (depois da safe area) */
+  /* Barra neon Few — fina, no topo absoluto (depois da safe area). Animada. */
   body::before {
     content: "";
     position: fixed;
@@ -92,10 +92,24 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--neon-gradient);
+    background: linear-gradient(
+      90deg,
+      hsl(var(--neon-purple)) 0%,
+      hsl(var(--neon-blue)) 25%,
+      hsl(var(--neon-pink)) 50%,
+      hsl(var(--neon-blue)) 75%,
+      hsl(var(--neon-purple)) 100%
+    );
+    background-size: 200% 100%;
+    animation: skatoday-neon-slide 8s linear infinite;
     z-index: 60;
     pointer-events: none;
   }
+}
+
+@keyframes skatoday-neon-slide {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 @layer utilities {

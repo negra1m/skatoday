@@ -36,14 +36,18 @@ export function dailyScore(params: {
   ran: boolean;
   jiu: boolean;
   routinePct: number;
+  tasksDoneToday: number;
 }) {
-  const { skated, bodyLogged, ran, jiu, routinePct } = params;
+  const { skated, bodyLogged, ran, jiu, routinePct, tasksDoneToday } = params;
   let s = 0;
-  if (skated) s += 30;
+  // Pesos redistribuídos (skate 25, body 10, run 15, jiu 15, rotina 15, tasks 20 = 100)
+  if (skated) s += 25;
   if (bodyLogged) s += 10;
-  if (ran) s += 20;
-  if (jiu) s += 20;
-  s += Math.round(routinePct * 20);
+  if (ran) s += 15;
+  if (jiu) s += 15;
+  s += Math.round(routinePct * 15);
+  // Tasks: +5 por task feita hoje, máx 20 pontos (4 tasks zeram a categoria)
+  s += Math.min(20, tasksDoneToday * 5);
   return Math.min(s, 100);
 }
 

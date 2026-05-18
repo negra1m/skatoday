@@ -44,17 +44,18 @@ export default async function DashboardPage() {
   const ranToday = runs.some((r) => r.date === today);
   const jiuToday = jiu.some((j) => j.date === today);
 
+  const tStats = taskStats(session.profile.id);
   const score = dailyScore({
     skated: !!todaySession,
     bodyLogged: !!body && body.date === today,
     ran: ranToday,
     jiu: jiuToday,
     routinePct,
+    tasksDoneToday: tStats.doneToday,
   });
 
   const streak = computeStreak(monthSessions.map((s) => s.date));
   const urgent = urgentTasks(session.profile.id, 5);
-  const tStats = taskStats(session.profile.id);
   const projectOptions = listActiveProjectNames(session.user.id);
 
   return (

@@ -151,6 +151,7 @@ export function taskStats(profileId: string) {
   const all = db.select().from(schema.tasks).where(eq(schema.tasks.profileId, profileId)).all();
   const today = new Date().toISOString().slice(0, 10);
   const open = all.filter((t) => !t.done);
+  const doneToday = all.filter((t) => t.done && t.completedAt && t.completedAt.slice(0, 10) === today).length;
   return {
     total: all.length,
     done: all.length - open.length,
@@ -158,6 +159,7 @@ export function taskStats(profileId: string) {
     urgent: open.filter((t) => t.priority === "urgent").length,
     overdue: open.filter((t) => t.deadline && t.deadline < today).length,
     dueToday: open.filter((t) => t.deadline === today).length,
+    doneToday,
   };
 }
 
