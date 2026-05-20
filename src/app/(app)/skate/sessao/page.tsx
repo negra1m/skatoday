@@ -15,13 +15,20 @@ import { deleteSessionTrickAction, deleteSkateSessionAction } from "../../action
 import { todayISO } from "@/lib/utils";
 import { FlowGauge } from "@/components/hud/FlowGauge";
 
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function normalizeDate(raw: string | undefined | null): string {
+  if (raw && ISO_RE.test(raw)) return raw;
+  return todayISO();
+}
+
 async function saveSession(formData: FormData) {
   "use server";
   const session = (await getCurrentSession())!;
-  const today = todayISO();
+  const date = normalizeDate(formData.get("date") as string | null);
   upsertSession({
     profileId: session.profile.id,
-    date: today,
+    date,
     durationMinutes: Number(formData.get("duration")) || null,
     location: (formData.get("location") as string) || null,
     sessionType: (formData.get("session_type") as "flow") || null,
@@ -32,14 +39,14 @@ async function saveSession(formData: FormData) {
     notes: (formData.get("notes") as string) || null,
   });
   revalidatePath("/skate/sessao");
-  redirect("/skate/sessao");
+  redirect(`/skate/sessao?d=${date}`);
 }
 
 async function addTrickLog(formData: FormData) {
   "use server";
   const session = (await getCurrentSession())!;
-  const today = todayISO();
-  const sessionId = upsertSession({ profileId: session.profile.id, date: today });
+  const date = normalizeDate(formData.get("date") as string | null);
+  const sessionId = upsertSession({ profileId: session.profile.id, date });
   logSessionTrick({
     profileId: session.profile.id,
     sessionId,
@@ -50,32 +57,88 @@ async function addTrickLog(formData: FormData) {
     notes: (formData.get("notes") as string) || null,
   });
   revalidatePath("/skate/sessao");
-  redirect("/skate/sessao");
+  redirect(`/skate/sessao?d=${date}`);
 }
 
-export default async function SessaoPage() {
-  const session = (await getCurrentSession())!;
+function formatHeaderDate(iso: string): { title: string; subtitle: string } {
   const today = todayISO();
-  const existing = getSessionByDate(session.profile.id, today);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const ystISO = yesterday.toISOString().slice(0, 10);
+  if (iso === today) return { title: "Sessão de hoje", subtitle: iso };
+  if (iso === ystISO) return { title: "Sessão de ontem", subtitle: iso };
+  const [y, m, d] = iso.split("-");
+  return { title: `Sessão de ${d}/${m}/${y}`, subtitle: iso };
+}
+
+export default async function SessaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ d?: string }>;
+}) {
+  const session = (await getCurrentSession())!;
+  const sp = await searchParams;
+  const targetDate = normalizeDate(sp.d ?? null);
+  const today = todayISO();
+  const existing = getSessionByDate(session.profile.id, targetDate);
   const tricks = listTricks(session.profile.id);
   const logs = existing ? listSessionTricks(existing.id) : [];
+  const header = formatHeaderDate(targetDate);
+
+  // Atalhos rápidos: hoje, ontem
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayISO = yesterday.toISOString().slice(0, 10);
 
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-hud text-2xl font-semibold">Sessão de hoje</h1>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">{today}</p>
+          <h1 className="text-hud text-2xl font-semibold">{header.title}</h1>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">{header.subtitle}</p>
         </div>
         {existing && (
           <DeleteButton
             action={deleteSkateSessionAction}
             id={existing.id}
-            message="Deletar a sessão inteira de hoje? Vai apagar todos os registros de tricks junto."
+            message="Deletar a sessão inteira? Vai apagar todos os registros de tricks junto."
             size="md"
           />
         )}
       </div>
+
+      <Card>
+        <CardContent className="flex items-center gap-2 py-3">
+          <a
+            href={`/skate/sessao?d=${today}`}
+            className={
+              "rounded-md px-3 py-1.5 text-xs uppercase tracking-widest transition-colors " +
+              (targetDate === today
+                ? "bg-foreground text-background"
+                : "border border-input bg-secondary text-muted-foreground hover:text-foreground")
+            }
+          >
+            Hoje
+          </a>
+          <a
+            href={`/skate/sessao?d=${yesterdayISO}`}
+            className={
+              "rounded-md px-3 py-1.5 text-xs uppercase tracking-widest transition-colors " +
+              (targetDate === yesterdayISO
+                ? "bg-foreground text-background"
+                : "border border-input bg-secondary text-muted-foreground hover:text-foreground")
+            }
+          >
+            Ontem
+          </a>
+          <form action="/skate/sessao" method="get" className="flex flex-1 items-center gap-2">
+            <Input type="date" name="d" defaultValue={targetDate} max={today} className="flex-1" />
+            <Button type="submit" variant="outline" size="sm">
+              Ir
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">
@@ -83,6 +146,7 @@ export default async function SessaoPage() {
         </CardHeader>
         <CardContent>
           <form action={saveSession} className="space-y-3">
+            <input type="hidden" name="date" value={targetDate} />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="duration">Duração (min)</Label>
@@ -173,6 +237,7 @@ export default async function SessaoPage() {
         </CardHeader>
         <CardContent>
           <form action={addTrickLog} className="space-y-3">
+            <input type="hidden" name="date" value={targetDate} />
             <div className="space-y-1">
               <Label htmlFor="trick_id">Trick</Label>
               <Select id="trick_id" name="trick_id" required defaultValue="">
@@ -214,7 +279,7 @@ export default async function SessaoPage() {
       {logs.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Treinadas hoje ({logs.length})</CardTitle>
+            <CardTitle className="text-base">Treinadas ({logs.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {logs.map((l) => (
