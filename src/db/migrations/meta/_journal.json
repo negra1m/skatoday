@@ -71,6 +71,13 @@
       "when": 1779325396085,
       "tag": "0009_lush_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1779327300214,
+      "tag": "0010_pale_lester",
+      "breakpoints": true
     }
   ]
 }

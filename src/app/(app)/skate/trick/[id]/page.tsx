@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentSession } from "@/lib/session";
 import { getTrickById, listSessionTricksByTrick } from "@/db/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteTrickButton } from "@/components/skate/DeleteTrickButton";
 
 export default async function TrickPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,6 +68,15 @@ export default async function TrickPage({ params }: { params: Promise<{ id: stri
               </div>
             ))
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Zona perigosa</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DeleteTrickButton id={trick.id} name={trick.name} historyCount={history.length} />
         </CardContent>
       </Card>
     </div>

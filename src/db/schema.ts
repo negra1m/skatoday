@@ -8,6 +8,7 @@ export const users = sqliteTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role", { enum: ["admin", "user"] }).notNull().default("user"),
   locale: text("locale", { enum: ["pt-BR", "en", "zh-CN"] }).notNull().default("pt-BR"),
+  timezone: text("timezone").notNull().default("America/Sao_Paulo"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   lastLoginAt: text("last_login_at"),

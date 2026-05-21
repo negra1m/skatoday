@@ -81,7 +81,7 @@ export default async function SkaterPage({
   const naBase = tricks.filter((t) => t.status === "na_base" || t.status === "arsenal").length;
   const arsenal = tricks.filter((t) => t.status === "arsenal").length;
 
-  const today = todayISO();
+  const today = todayISO(s.user.timezone);
   const [yyyy, mm] = today.split("-").map(Number);
   const monthSessions = listSessionsInMonth(profile.id, today.slice(0, 7));
   const streak = computeStreak(monthSessions.map((m) => m.date));

@@ -23,7 +23,7 @@ import { listRoutineItems } from "@/db/routine";
 
 export default async function DashboardPage() {
   const session = (await getCurrentSession())!;
-  const today = todayISO();
+  const today = todayISO(session.user.timezone);
   const [yyyy, mm] = today.split("-").map(Number);
 
   const monthSessions = listSessionsInMonth(session.profile.id, today.slice(0, 7));
