@@ -9,6 +9,7 @@ import {
   deleteRun,
   deleteSessionTrick,
   deleteSkateSession,
+  deleteTrick,
   updateBodyLog,
   updateJiu,
   updateRun,
@@ -64,6 +65,16 @@ export async function deleteSessionTrickAction(formData: FormData) {
   deleteSessionTrick({ profileId: s.profile.id, sessionTrickId: String(formData.get("id") ?? "") });
   revalidatePath("/skate/sessao");
   revalidatePath("/skate");
+}
+
+export async function deleteTrickAction(formData: FormData) {
+  const s = await requireSession();
+  const trickId = String(formData.get("id") ?? "");
+  if (!trickId) return;
+  deleteTrick({ profileId: s.profile.id, trickId });
+  revalidatePath("/skate");
+  revalidatePath("/skate/sessao");
+  revalidatePath("/");
 }
 
 export async function updateBodyLogAction(formData: FormData) {

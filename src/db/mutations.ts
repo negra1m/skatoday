@@ -339,6 +339,13 @@ export function deleteSkateSession(input: { profileId: string; sessionId: string
     .run();
 }
 
+export function deleteTrick(input: { profileId: string; trickId: string }) {
+  // ownership check + cascade leva session_tricks junto
+  db.delete(schema.tricks)
+    .where(and(eq(schema.tricks.id, input.trickId), eq(schema.tricks.profileId, input.profileId)))
+    .run();
+}
+
 export function deleteSessionTrick(input: { profileId: string; sessionTrickId: string }) {
   const row = db
     .select({ st: schema.sessionTricks, session: schema.skateSessions })

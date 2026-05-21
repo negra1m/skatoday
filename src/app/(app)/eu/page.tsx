@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet } from "lucide-react";
+import { Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Users } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
+import { listFriends, listPendingIncoming } from "@/db/friends";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default async function EuPage() {
@@ -63,6 +64,20 @@ export default async function EuPage() {
     icon: ListChecks,
     label: "Rotina do dia",
     hint: "Tarefas da casa + treino",
+  });
+
+  const friends = listFriends(s.user.id);
+  const pending = listPendingIncoming(s.user.id);
+  sections.push({
+    href: "/amigos",
+    icon: Users,
+    label: "Amigos",
+    hint:
+      pending.length > 0
+        ? `${friends.length} amigos · ${pending.length} pedido${pending.length > 1 ? "s" : ""} pendente${pending.length > 1 ? "s" : ""}`
+        : friends.length === 0
+          ? "Adicione amigos e veja a ficha deles"
+          : `${friends.length} ${friends.length === 1 ? "amigo" : "amigos"}`,
   });
 
   return (

@@ -4,6 +4,7 @@ import {
   getSessionByDate,
   latestBodyLog,
   listSessionsInMonth,
+  listSessionTricksByMonth,
   listRoutineForDate,
   listRuns,
   listJiu,
@@ -26,10 +27,11 @@ export default async function DashboardPage() {
   const [yyyy, mm] = today.split("-").map(Number);
 
   const monthSessions = listSessionsInMonth(session.profile.id, today.slice(0, 7));
+  const tricksByDate = listSessionTricksByMonth(session.profile.id, today.slice(0, 7));
   const cells = monthSessions.map((s) => {
     const dur = s.durationMinutes ?? 0;
     const intensity = (dur >= 90 ? 4 : dur >= 60 ? 3 : dur >= 30 ? 2 : 1) as 0 | 1 | 2 | 3 | 4;
-    return { date: s.date, intensity };
+    return { date: s.date, intensity, tricksCount: tricksByDate.get(s.date) ?? 0 };
   });
 
   const todaySession = getSessionByDate(session.profile.id, today);
