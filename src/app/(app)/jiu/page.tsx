@@ -17,7 +17,7 @@ async function save(formData: FormData) {
   const s = (await getCurrentSession())!;
   logJiu({
     profileId: s.profile.id,
-    date: (formData.get("date") as string) || todayISO(),
+    date: (formData.get("date") as string) || todayISO(s.user.timezone),
     durationMinutes: Number(formData.get("durationMinutes")),
     rolls: Number(formData.get("rolls")),
     intensity: Number(formData.get("intensity")),
@@ -49,7 +49,7 @@ export default async function JiuPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="date">Data</Label>
-                <Input id="date" name="date" type="date" defaultValue={todayISO()} />
+                <Input id="date" name="date" type="date" defaultValue={todayISO(s.user.timezone)} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="durationMinutes">Tempo (min)</Label>

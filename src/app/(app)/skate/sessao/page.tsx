@@ -12,20 +12,20 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { LogSwipeRow } from "@/components/ui/log-swipe-row";
 import { deleteSessionTrickAction, deleteSkateSessionAction } from "../../actions";
-import { todayISO } from "@/lib/utils";
+import { todayISO, formatDateInTz } from "@/lib/utils";
 import { FlowGauge } from "@/components/hud/FlowGauge";
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function normalizeDate(raw: string | undefined | null): string {
+function normalizeDate(raw: string | undefined | null, tz: string): string {
   if (raw && ISO_RE.test(raw)) return raw;
-  return todayISO();
+  return todayISO(tz);
 }
 
 async function saveSession(formData: FormData) {
   "use server";
   const session = (await getCurrentSession())!;
-  const date = normalizeDate(formData.get("date") as string | null);
+  const date = normalizeDate(formData.get("date") as string | null, session.user.timezone);
   upsertSession({
     profileId: session.profile.id,
     date,
@@ -45,7 +45,7 @@ async function saveSession(formData: FormData) {
 async function addTrickLog(formData: FormData) {
   "use server";
   const session = (await getCurrentSession())!;
-  const date = normalizeDate(formData.get("date") as string | null);
+  const date = normalizeDate(formData.get("date") as string | null, session.user.timezone);
   const sessionId = upsertSession({ profileId: session.profile.id, date });
   logSessionTrick({
     profileId: session.profile.id,
@@ -60,11 +60,10 @@ async function addTrickLog(formData: FormData) {
   redirect(`/skate/sessao?d=${date}`);
 }
 
-function formatHeaderDate(iso: string): { title: string; subtitle: string } {
-  const today = todayISO();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const ystISO = yesterday.toISOString().slice(0, 10);
+function formatHeaderDate(iso: string, tz: string): { title: string; subtitle: string } {
+  const today = todayISO(tz);
+  const ystDate = new Date(Date.now() - 86400000);
+  const ystISO = formatDateInTz(ystDate, tz);
   if (iso === today) return { title: "Sessão de hoje", subtitle: iso };
   if (iso === ystISO) return { title: "Sessão de ontem", subtitle: iso };
   const [y, m, d] = iso.split("-");
@@ -77,18 +76,17 @@ export default async function SessaoPage({
   searchParams: Promise<{ d?: string }>;
 }) {
   const session = (await getCurrentSession())!;
+  const tz = session.user.timezone;
   const sp = await searchParams;
-  const targetDate = normalizeDate(sp.d ?? null);
-  const today = todayISO();
+  const targetDate = normalizeDate(sp.d ?? null, tz);
+  const today = todayISO(tz);
   const existing = getSessionByDate(session.profile.id, targetDate);
   const tricks = listTricks(session.profile.id);
   const logs = existing ? listSessionTricks(existing.id) : [];
-  const header = formatHeaderDate(targetDate);
+  const header = formatHeaderDate(targetDate, tz);
 
-  // Atalhos rápidos: hoje, ontem
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayISO = yesterday.toISOString().slice(0, 10);
+  // Atalhos rápidos: hoje, ontem (no fuso do user)
+  const yesterdayISO = formatDateInTz(new Date(Date.now() - 86400000), tz);
 
   return (
     <div className="space-y-4">

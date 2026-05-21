@@ -15,7 +15,7 @@ import { todayISO } from "@/lib/utils";
 
 export default async function RotinaPage() {
   const s = (await getCurrentSession())!;
-  const today = todayISO();
+  const today = todayISO(s.user.timezone);
   const items = listRoutineItems(s.user.id);
   const checks = listRoutineForDate(s.profile.id, today);
   const doneMap = new Map(checks.map((c) => [c.taskKey, c.done]));

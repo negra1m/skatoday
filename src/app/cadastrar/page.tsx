@@ -31,6 +31,8 @@ async function signUp(formData: FormData) {
 
   const passwordHash = await hashPassword(password);
   const isFirst = !db.select().from(schema.users).get();
+  const tzRaw = String(formData.get("timezone") ?? "").trim();
+  const timezone = tzRaw && /^[A-Za-z_/-]+$/.test(tzRaw) ? tzRaw : "America/Sao_Paulo";
   const user = db
     .insert(schema.users)
     .values({
@@ -38,6 +40,7 @@ async function signUp(formData: FormData) {
       email,
       passwordHash,
       role: isFirst ? "admin" : "user",
+      timezone,
     })
     .returning()
     .get();
@@ -130,6 +133,13 @@ export default async function CadastrarPage({
               minLength={8}
             />
           </div>
+          {/* Timezone auto-detect (preenchido por client script) */}
+          <input type="hidden" id="timezone" name="timezone" defaultValue="America/Sao_Paulo" />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `try{var el=document.getElementById('timezone');var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;if(el&&tz)el.value=tz;}catch(e){}`,
+            }}
+          />
           {erroMsg && <p className="text-xs text-destructive">{erroMsg}</p>}
           <Button type="submit" className="w-full">
             {t("auth.signup")}

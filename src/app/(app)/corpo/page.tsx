@@ -22,7 +22,7 @@ async function save(formData: FormData) {
   };
   logBody({
     profileId: s.profile.id,
-    date: todayISO(),
+    date: todayISO(s.user.timezone),
     weightKg: num("weightKg"),
     bodyFatPct: num("bodyFatPct"),
     visceralFat: num("visceralFat"),

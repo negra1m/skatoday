@@ -75,6 +75,7 @@ export async function deleteTrickAction(formData: FormData) {
   revalidatePath("/skate");
   revalidatePath("/skate/sessao");
   revalidatePath("/");
+  redirect("/skate");
 }
 
 export async function updateBodyLogAction(formData: FormData) {

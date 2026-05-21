@@ -18,7 +18,7 @@ async function save(formData: FormData) {
   const s = (await getCurrentSession())!;
   logRun({
     profileId: s.profile.id,
-    date: (formData.get("date") as string) || todayISO(),
+    date: (formData.get("date") as string) || todayISO(s.user.timezone),
     distanceKm: Number(formData.get("distanceKm")),
     durationMinutes: Number(formData.get("durationMinutes")),
     type: (formData.get("type") as "leve") || "leve",
@@ -45,7 +45,7 @@ export default async function CorridaPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="date">Data</Label>
-                <Input id="date" name="date" type="date" defaultValue={todayISO()} />
+                <Input id="date" name="date" type="date" defaultValue={todayISO(s.user.timezone)} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="type">Tipo</Label>
