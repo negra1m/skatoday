@@ -2,8 +2,9 @@ import Link from "next/link";
 import { getCurrentSession } from "@/lib/session";
 import { listTricks } from "@/db/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogSwipeRow } from "@/components/ui/log-swipe-row";
+import { deleteTrickAction } from "../actions";
 import type { Trick } from "@/db/schema";
-import { cn } from "@/lib/utils";
 
 const SECTIONS: Array<{ title: string; status: Trick["status"] }> = [
   { title: "Arsenal", status: "arsenal" },
@@ -53,21 +54,26 @@ export default async function ArsenalPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {items.map((t) => (
-                <Link
+                <LogSwipeRow
                   key={t.id}
-                  href={`/skate/trick/${t.id}`}
-                  className={cn(
-                    "flex items-center justify-between rounded-md border border-border px-3 py-2 transition-colors hover:bg-muted/40",
-                  )}
+                  id={t.id}
+                  editHref={`/skate/trick/${t.id}`}
+                  deleteAction={deleteTrickAction}
+                  confirmMessage={`Deletar "${t.name}"? Vai apagar todo o histórico de sessões dessa trick. Sem volta.`}
                 >
-                  <div>
-                    <div className="text-sm font-medium">{t.name}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {t.category} · {t.stance} · lvl {t.level}
+                  <Link
+                    href={`/skate/trick/${t.id}`}
+                    className="flex items-center justify-between border border-border bg-card px-3 py-2 transition-colors hover:bg-muted/40"
+                  >
+                    <div>
+                      <div className="text-sm font-medium">{t.name}</div>
+                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {t.category} · {t.stance} · lvl {t.level}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-hud text-xs tabular-nums text-muted-foreground">{t.totalXp}xp</div>
-                </Link>
+                    <div className="text-hud text-xs tabular-nums text-muted-foreground">{t.totalXp}xp</div>
+                  </Link>
+                </LogSwipeRow>
               ))}
             </CardContent>
           </Card>
