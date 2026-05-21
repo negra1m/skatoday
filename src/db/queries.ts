@@ -51,6 +51,29 @@ export function listSessionTricks(sessionId: string) {
     .all();
 }
 
+/** Conta quantos session_tricks foram registrados por dia no mês indicado. */
+export function listSessionTricksByMonth(profileId: string, yearMonth: string): Map<string, number> {
+  const rows = db
+    .select({
+      date: schema.skateSessions.date,
+      stId: schema.sessionTricks.id,
+    })
+    .from(schema.sessionTricks)
+    .innerJoin(schema.skateSessions, eq(schema.skateSessions.id, schema.sessionTricks.sessionId))
+    .where(
+      and(
+        eq(schema.skateSessions.profileId, profileId),
+        sql`substr(${schema.skateSessions.date}, 1, 7) = ${yearMonth}`,
+      ),
+    )
+    .all();
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    map.set(r.date, (map.get(r.date) ?? 0) + 1);
+  }
+  return map;
+}
+
 export function listSessionTricksByTrick(trickId: string) {
   return db
     .select({
