@@ -64,6 +64,13 @@
       "when": 1778705372659,
       "tag": "0008_concerned_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1779325396085,
+      "tag": "0009_lush_green_goblin",
+      "breakpoints": true
     }
   ]
 }

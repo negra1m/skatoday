@@ -368,6 +368,30 @@ export const pushSubscriptions = sqliteTable(
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 
+export const friendships = sqliteTable(
+  "friendships",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addresseeId: text("addressee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status", { enum: ["pending", "accepted", "blocked"] })
+      .notNull()
+      .default("pending"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    acceptedAt: text("accepted_at"),
+  },
+  (t) => ({
+    uniq: uniqueIndex("friendships_pair").on(t.requesterId, t.addresseeId),
+  }),
+);
+
+export type Friendship = typeof friendships.$inferSelect;
+export type NewFriendship = typeof friendships.$inferInsert;
+
 export type Trick = typeof tricks.$inferSelect;
 export type NewTrick = typeof tricks.$inferInsert;
 export type SkateSession = typeof skateSessions.$inferSelect;
