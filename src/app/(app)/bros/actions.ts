@@ -25,7 +25,7 @@ export async function sendFriendRequestAction(formData: FormData) {
   if (!targetId && usernameRaw) {
     const target = findUserByUsername(usernameRaw);
     if (!target) {
-      revalidatePath("/amigos/buscar");
+      revalidatePath("/bros/buscar");
       return;
     }
     targetId = target.id;
@@ -37,8 +37,8 @@ export async function sendFriendRequestAction(formData: FormData) {
   } catch {
     // ignora (self, duplicate, etc)
   }
-  revalidatePath("/amigos");
-  revalidatePath("/amigos/buscar");
+  revalidatePath("/bros");
+  revalidatePath("/bros/buscar");
 }
 
 export async function acceptFriendRequestAction(formData: FormData) {
@@ -46,7 +46,7 @@ export async function acceptFriendRequestAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   acceptFriendship(s.user.id, id);
-  revalidatePath("/amigos");
+  revalidatePath("/bros");
 }
 
 export async function removeFriendAction(formData: FormData) {
@@ -54,5 +54,5 @@ export async function removeFriendAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   removeFriendship(s.user.id, id);
-  revalidatePath("/amigos");
+  revalidatePath("/bros");
 }

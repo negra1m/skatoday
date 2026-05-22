@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { sendFriendRequestAction } from "../actions";
 
-export default async function BuscarAmigosPage({
+export default async function BuscarBrosPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -19,14 +19,14 @@ export default async function BuscarAmigosPage({
 
   return (
     <div className="space-y-4">
-      <Link href="/amigos" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        ← Amigos
+      <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        ← Bros
       </Link>
-      <h1 className="text-hud text-2xl font-semibold">Buscar amigos</h1>
+      <h1 className="text-hud text-2xl font-semibold">Buscar bros</h1>
 
       <Card>
         <CardContent className="pt-4">
-          <form action="/amigos/buscar" method="get" className="flex gap-2">
+          <form action="/bros/buscar" method="get" className="flex gap-2">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -70,7 +70,7 @@ export default async function BuscarAmigosPage({
                   </div>
                   {status === "accepted" ? (
                     <span className="text-[10px] uppercase tracking-widest text-emerald-400">
-                      já é amigo
+                      já é bro
                     </span>
                   ) : status === "pending" ? (
                     <span className="text-[10px] uppercase tracking-widest text-amber-400">
@@ -80,7 +80,7 @@ export default async function BuscarAmigosPage({
                     <form action={sendFriendRequestAction}>
                       <input type="hidden" name="addresseeId" value={u.id} />
                       <Button type="submit" size="sm">
-                        <UserPlus className="h-3.5 w-3.5" /> Adicionar
+                        <UserPlus className="h-3.5 w-3.5" /> Adicionar bro
                       </Button>
                     </form>
                   )}

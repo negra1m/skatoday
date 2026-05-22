@@ -7,7 +7,7 @@ type PublicUser = {
   profileName: string | null;
 };
 
-// Lista amigos aceitos (requesterId ou addresseeId = userId, status accepted).
+// Lista bros aceitos (requesterId ou addresseeId = userId, status accepted).
 export function listFriends(userId: string): PublicUser[] {
   // Vamos pegar as 2 direções
   const out = db
