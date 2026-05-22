@@ -17,7 +17,7 @@ import { computeStreak } from "@/lib/xp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StreakMap } from "@/components/hud/StreakMap";
-import { sendFriendRequestAction } from "../../amigos/actions";
+import { sendFriendRequestAction } from "../../bros/actions";
 import { todayISO } from "@/lib/utils";
 
 export default async function SkaterPage({
@@ -35,15 +35,15 @@ export default async function SkaterPage({
   const accepted = isSelf || friendship?.status === "accepted";
 
   if (!accepted) {
-    // Não-amigos veem só uma versão muito reduzida: nome + botão de adicionar
+    // Não-bros veem só uma versão muito reduzida: nome + botão de adicionar
     const profile = getProfileByUserId(target.id);
     const pendingRequest = friendship?.status === "pending";
     const sentByMe = pendingRequest && friendship?.requesterId === s.user.id;
 
     return (
       <div className="space-y-4">
-        <Link href="/amigos" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          ← Amigos
+        <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          ← Bros
         </Link>
         <Card>
           <CardContent className="space-y-3 pt-6 text-center">
@@ -52,17 +52,17 @@ export default async function SkaterPage({
               <p className="text-sm text-muted-foreground">{profile.name}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              Adicione como amigo pra ver a ficha de skate.
+              Adicione como bro pra ver a ficha de skate.
             </p>
             {pendingRequest ? (
               <p className="text-[10px] uppercase tracking-widest text-amber-400">
-                {sentByMe ? "pedido enviado" : "este usuário te enviou pedido — confirme em /amigos"}
+                {sentByMe ? "pedido enviado" : "este usuário te enviou pedido — confirme em /bros"}
               </p>
             ) : (
               <form action={sendFriendRequestAction}>
                 <input type="hidden" name="addresseeId" value={target.id} />
                 <Button type="submit" className="w-full">
-                  Adicionar como amigo
+                  Adicionar como bro
                 </Button>
               </form>
             )}
@@ -72,7 +72,7 @@ export default async function SkaterPage({
     );
   }
 
-  // Amigos OU self: ficha completa
+  // Bros OU self: ficha completa
   const profile = getProfileByUserId(target.id);
   if (!profile) notFound();
 
@@ -95,8 +95,8 @@ export default async function SkaterPage({
   return (
     <div className="space-y-4">
       {!isSelf && (
-        <Link href="/amigos" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          ← Amigos
+        <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          ← Bros
         </Link>
       )}
 

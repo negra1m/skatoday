@@ -66,18 +66,18 @@ export default async function EuPage() {
     hint: "Tarefas da casa + treino",
   });
 
-  const friends = listFriends(s.user.id);
+  const bros = listFriends(s.user.id);
   const pending = listPendingIncoming(s.user.id);
   sections.push({
-    href: "/amigos",
+    href: "/bros",
     icon: Users,
-    label: "Amigos",
+    label: "Bros",
     hint:
       pending.length > 0
-        ? `${friends.length} amigos · ${pending.length} pedido${pending.length > 1 ? "s" : ""} pendente${pending.length > 1 ? "s" : ""}`
-        : friends.length === 0
-          ? "Adicione amigos e veja a ficha deles"
-          : `${friends.length} ${friends.length === 1 ? "amigo" : "amigos"}`,
+        ? `${bros.length} bros · ${pending.length} pedido${pending.length > 1 ? "s" : ""} pendente${pending.length > 1 ? "s" : ""}`
+        : bros.length === 0
+          ? "Adicione bros e veja a ficha deles"
+          : `${bros.length} ${bros.length === 1 ? "bro" : "bros"}`,
   });
 
   return (
