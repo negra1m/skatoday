@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WaterControls } from "@/components/water/WaterControls";
 import { WaterConfigForm } from "@/components/water/WaterConfigForm";
 import { WaterScheduler } from "@/components/water/WaterScheduler";
+import { getT } from "@/lib/i18n/server";
+import { tf } from "@/lib/i18n/dict";
 
 export default async function AguaPage() {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const cfg = ensureWaterConfig(s.profile.id);
   const goalMl = getEffectiveGoalMl(s.profile.id);
   const today = new Date().toISOString().slice(0, 10);
@@ -18,11 +21,11 @@ export default async function AguaPage() {
   return (
     <div className="space-y-4">
       <Link href="/eu" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        ← Eu
+        ← {t("eu.title")}
       </Link>
-      <h1 className="text-hud text-2xl font-semibold">Água</h1>
+      <h1 className="text-hud text-2xl font-semibold">{t("water.title")}</h1>
       <p className="text-xs uppercase tracking-widest text-muted-foreground">
-        Meta hoje: {(goalMl / 1000).toFixed(1)}L {isAuto && "(auto)"}
+        {t("water.goal_today")}: {(goalMl / 1000).toFixed(1)}L {isAuto && t("water.auto")}
       </p>
 
       <Card>
@@ -46,7 +49,7 @@ export default async function AguaPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Configuração</CardTitle>
+          <CardTitle className="text-base">{t("water.config")}</CardTitle>
         </CardHeader>
         <CardContent>
           <WaterConfigForm
@@ -64,7 +67,7 @@ export default async function AguaPage() {
       {history.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Histórico ({history.length})</CardTitle>
+            <CardTitle className="text-base">{tf(t("water.history"), { n: history.length })}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
             {history.map((h) => {

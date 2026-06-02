@@ -8,9 +8,11 @@ import {
   acceptFriendRequestAction,
   removeFriendAction,
 } from "./actions";
+import { getT } from "@/lib/i18n/server";
 
 export default async function BrosPage() {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const bros = listFriends(s.user.id);
   const incoming = listPendingIncoming(s.user.id);
   const outgoing = listPendingOutgoing(s.user.id);
@@ -18,12 +20,12 @@ export default async function BrosPage() {
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-hud text-2xl font-semibold">Bros</h1>
+        <h1 className="text-hud text-2xl font-semibold">{t("bros.title")}</h1>
         <Link
           href="/bros/buscar"
           className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90"
         >
-          <UserPlus className="h-3.5 w-3.5" /> Adicionar bro
+          <UserPlus className="h-3.5 w-3.5" /> {t("bros.add")}
         </Link>
       </header>
 
@@ -31,7 +33,7 @@ export default async function BrosPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              Pedidos recebidos · {incoming.length}
+              {t("bros.requests_received")} · {incoming.length}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -71,17 +73,13 @@ export default async function BrosPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">
-            {bros.length === 0 ? "Sem bros ainda" : `Bros · ${bros.length}`}
+            {bros.length === 0 ? t("bros.empty") : `${t("bros.count")} · ${bros.length}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {bros.length === 0 ? (
             <p className="py-3 text-center text-sm text-muted-foreground">
-              Use{" "}
-              <Link href="/bros/buscar" className="underline">
-                buscar
-              </Link>{" "}
-              pra adicionar.
+              {t("bros.use_search")}
             </p>
           ) : (
             bros.map((f) => (
@@ -99,7 +97,7 @@ export default async function BrosPage() {
                   )}
                 </div>
                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  ver ficha
+                  {t("bros.see_profile")}
                 </span>
               </Link>
             ))
@@ -111,7 +109,7 @@ export default async function BrosPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              Pedidos enviados · {outgoing.length}
+              {t("bros.requests_sent")} · {outgoing.length}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -123,13 +121,13 @@ export default async function BrosPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">@{p.username}</p>
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    aguardando aceitar
+                    {t("bros.waiting_accept")}
                   </p>
                 </div>
                 <form action={removeFriendAction}>
                   <input type="hidden" name="id" value={p.friendshipId} />
                   <Button type="submit" variant="outline" size="sm">
-                    Cancelar
+                    {t("bros.cancel")}
                   </Button>
                 </form>
               </div>

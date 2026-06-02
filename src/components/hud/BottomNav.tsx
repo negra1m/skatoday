@@ -5,27 +5,48 @@ import { usePathname } from "next/navigation";
 import { Activity, Briefcase, Home, ListChecks, FolderKanban, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Item = { href: string; icon: typeof Home; label: string };
+export type NavLabels = {
+  hud: string;
+  tasks: string;
+  skate: string;
+  projects: string;
+  me: string;
+  clients: string;
+};
 
-const ITEMS_USER: Item[] = [
-  { href: "/", icon: Home, label: "HUD" },
-  { href: "/tarefas", icon: ListChecks, label: "Tarefas" },
-  { href: "/skate", icon: Activity, label: "Skate" },
-  { href: "/projetos", icon: FolderKanban, label: "Projetos" },
-  { href: "/eu", icon: User, label: "Eu" },
-];
+const DEFAULT_LABELS: NavLabels = {
+  hud: "HUD",
+  tasks: "Tarefas",
+  skate: "Skate",
+  projects: "Projetos",
+  me: "Eu",
+  clients: "Clientes",
+};
 
-const ITEMS_ADMIN: Item[] = [
-  { href: "/", icon: Home, label: "HUD" },
-  { href: "/tarefas", icon: ListChecks, label: "Tarefas" },
-  { href: "/clientes", icon: Briefcase, label: "Clientes" },
-  { href: "/projetos", icon: FolderKanban, label: "Projetos" },
-  { href: "/eu", icon: User, label: "Eu" },
-];
-
-export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
+export function BottomNav({
+  isAdmin = false,
+  labels = DEFAULT_LABELS,
+}: {
+  isAdmin?: boolean;
+  labels?: NavLabels;
+}) {
   const path = usePathname();
-  const items = isAdmin ? ITEMS_ADMIN : ITEMS_USER;
+  const items = isAdmin
+    ? [
+        { href: "/", icon: Home, label: labels.hud },
+        { href: "/tarefas", icon: ListChecks, label: labels.tasks },
+        { href: "/clientes", icon: Briefcase, label: labels.clients },
+        { href: "/projetos", icon: FolderKanban, label: labels.projects },
+        { href: "/eu", icon: User, label: labels.me },
+      ]
+    : [
+        { href: "/", icon: Home, label: labels.hud },
+        { href: "/tarefas", icon: ListChecks, label: labels.tasks },
+        { href: "/skate", icon: Activity, label: labels.skate },
+        { href: "/projetos", icon: FolderKanban, label: labels.projects },
+        { href: "/eu", icon: User, label: labels.me },
+      ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur">
       <ul className="mx-auto grid max-w-md grid-cols-5">

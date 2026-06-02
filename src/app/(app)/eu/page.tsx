@@ -5,9 +5,11 @@ import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
 import { listFriends, listPendingIncoming } from "@/db/friends";
 import { Card, CardContent } from "@/components/ui/card";
+import { getT } from "@/lib/i18n/server";
 
 export default async function EuPage() {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const isAdmin = s.user.role === "admin";
   const body = latestBodyLog(s.profile.id);
   const runs = listRuns(s.profile.id);
@@ -24,8 +26,8 @@ export default async function EuPage() {
     sections.push({
       href: "/skate",
       icon: Activity,
-      label: "Skate",
-      hint: "Arsenal · Sessão · Tricks",
+      label: t("eu.skate"),
+      hint: t("eu.skate_hint"),
     });
   }
 
@@ -33,20 +35,20 @@ export default async function EuPage() {
     {
       href: "/corpo",
       icon: Dumbbell,
-      label: "Corpo",
-      hint: body ? `${body.weightKg ?? "—"}kg · ${body.date}` : "Sem logs ainda",
+      label: t("eu.body"),
+      hint: body ? `${body.weightKg ?? "—"}kg · ${body.date}` : t("eu.body_empty"),
     },
     {
       href: "/agua",
       icon: Droplet,
-      label: "Água",
+      label: t("eu.water"),
       hint: `${((waterLog?.mlDrunk ?? 0) / 1000).toFixed(2)}L / ${(waterGoalMl / 1000).toFixed(1)}L · ${waterPct}%`,
     },
     {
       href: "/corrida",
       icon: Footprints,
-      label: "Corrida",
-      hint: runs[0] ? `${runs[0].distanceKm}km · ${runs[0].date}` : "Sem corridas ainda",
+      label: t("eu.run"),
+      hint: runs[0] ? `${runs[0].distanceKm}km · ${runs[0].date}` : t("eu.run_empty"),
     },
   );
 
@@ -54,16 +56,16 @@ export default async function EuPage() {
     sections.push({
       href: "/jiu",
       icon: Swords,
-      label: "Jiu",
-      hint: jiu[0] ? `${jiu[0].durationMinutes}min · ${jiu[0].date}` : "Sem treinos ainda",
+      label: t("eu.jiu"),
+      hint: jiu[0] ? `${jiu[0].durationMinutes}min · ${jiu[0].date}` : t("eu.jiu_empty"),
     });
   }
 
   sections.push({
     href: "/rotina",
     icon: ListChecks,
-    label: "Rotina do dia",
-    hint: "Tarefas da casa + treino",
+    label: t("eu.routine"),
+    hint: t("eu.routine_hint"),
   });
 
   const bros = listFriends(s.user.id);
@@ -71,18 +73,18 @@ export default async function EuPage() {
   sections.push({
     href: "/bros",
     icon: Users,
-    label: "Bros",
+    label: t("bros.title"),
     hint:
       pending.length > 0
-        ? `${bros.length} bros · ${pending.length} pedido${pending.length > 1 ? "s" : ""} pendente${pending.length > 1 ? "s" : ""}`
+        ? `${bros.length} ${t("bros.count").toLowerCase()} · ${pending.length} ${t("common.pending").toLowerCase()}`
         : bros.length === 0
-          ? "Adicione bros e veja a ficha deles"
+          ? t("bros.hint_card_default")
           : `${bros.length} ${bros.length === 1 ? "bro" : "bros"}`,
   });
 
   return (
     <div className="space-y-4">
-      <h1 className="text-hud text-2xl font-semibold">Eu</h1>
+      <h1 className="text-hud text-2xl font-semibold">{t("eu.title")}</h1>
       <div className="space-y-3">
         {sections.map((sec) => {
           const Icon = sec.icon;

@@ -4,10 +4,13 @@ import { getCurrentSession } from "@/lib/session";
 import { getTrickById, listSessionTricksByTrick } from "@/db/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteTrickButton } from "@/components/skate/DeleteTrickButton";
+import { getT } from "@/lib/i18n/server";
+import { tf } from "@/lib/i18n/dict";
 
 export default async function TrickPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = (await getCurrentSession())!;
+  const t = await getT();
   const trick = getTrickById(session.profile.id, id);
   if (!trick) notFound();
 
@@ -22,30 +25,30 @@ export default async function TrickPage({ params }: { params: Promise<{ id: stri
     <div className="space-y-4">
       <header className="space-y-1">
         <Link href="/skate" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          ← Arsenal
+          ← {t("skate.arsenal_title")}
         </Link>
         <h1 className="text-hud text-2xl font-semibold">{trick.name}</h1>
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          {trick.category} · {trick.stance} · lvl {trick.level} · status {trick.status}
+          {trick.category} · {trick.stance} · lvl {trick.level} · {trick.status}
         </p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 text-hud">
-        <Stat label="XP total" value={String(trick.totalXp)} />
-        <Stat label="Taxa" value={`${rate}%`} />
-        <Stat label="Tentativas" value={String(totalAttempts)} />
-        <Stat label="Acertos" value={String(totalLands)} />
-        <Stat label="Melhor streak" value={String(bestStreak)} />
-        <Stat label="Último treino" value={last ?? "—"} />
+        <Stat label={t("sk.stat_total_xp")} value={String(trick.totalXp)} />
+        <Stat label={t("sk.stat_rate")} value={`${rate}%`} />
+        <Stat label={t("sk.stat_attempts")} value={String(totalAttempts)} />
+        <Stat label={t("sk.stat_lands")} value={String(totalLands)} />
+        <Stat label={t("sk.stat_best_streak")} value={String(bestStreak)} />
+        <Stat label={t("sk.stat_last_session")} value={last ?? "—"} />
       </div>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Histórico ({history.length})</CardTitle>
+          <CardTitle className="text-base">{tf(t("sk.history"), { n: history.length })}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nada registrado ainda.</p>
+            <p className="text-sm text-muted-foreground">{t("sk.empty_history")}</p>
           ) : (
             history.map((h) => (
               <div
@@ -58,7 +61,7 @@ export default async function TrickPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="text-sm">
                     {h.st.lands}/{h.st.attempts} · streak {h.st.bestStreak}
-                    {h.st.isBaseRun && " · NA BASE"}
+                    {h.st.isBaseRun && ` · ${t("sk.in_base")}`}
                   </div>
                   {h.st.notes && <div className="text-xs text-muted-foreground">{h.st.notes}</div>}
                 </div>
@@ -73,7 +76,7 @@ export default async function TrickPage({ params }: { params: Promise<{ id: stri
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Zona perigosa</CardTitle>
+          <CardTitle className="text-base">{t("sk.zone_danger")}</CardTitle>
         </CardHeader>
         <CardContent>
           <DeleteTrickButton id={trick.id} name={trick.name} historyCount={history.length} />
