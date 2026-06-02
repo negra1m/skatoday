@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { StreakMap } from "@/components/hud/StreakMap";
 import { sendFriendRequestAction } from "../../bros/actions";
 import { todayISO } from "@/lib/utils";
+import { getT } from "@/lib/i18n/server";
+import { tf } from "@/lib/i18n/dict";
 
 export default async function SkaterPage({
   params,
@@ -26,6 +28,7 @@ export default async function SkaterPage({
   params: Promise<{ username: string }>;
 }) {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const { username } = await params;
   const target = findUserByUsername(decodeURIComponent(username));
   if (!target) notFound();
@@ -43,7 +46,7 @@ export default async function SkaterPage({
     return (
       <div className="space-y-4">
         <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          ← Bros
+          ← {t("bros.title")}
         </Link>
         <Card>
           <CardContent className="space-y-3 pt-6 text-center">
@@ -52,17 +55,17 @@ export default async function SkaterPage({
               <p className="text-sm text-muted-foreground">{profile.name}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              Adicione como bro pra ver a ficha de skate.
+              {t("bros.add_to_see_card")}
             </p>
             {pendingRequest ? (
               <p className="text-[10px] uppercase tracking-widest text-amber-400">
-                {sentByMe ? "pedido enviado" : "este usuário te enviou pedido — confirme em /bros"}
+                {sentByMe ? t("bros.request_sent_short") : t("bros.request_received_short")}
               </p>
             ) : (
               <form action={sendFriendRequestAction}>
                 <input type="hidden" name="addresseeId" value={target.id} />
                 <Button type="submit" className="w-full">
-                  Adicionar como bro
+                  {t("bros.add_as_bro")}
                 </Button>
               </form>
             )}
@@ -96,7 +99,7 @@ export default async function SkaterPage({
     <div className="space-y-4">
       {!isSelf && (
         <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          ← Bros
+          ← {t("bros.title")}
         </Link>
       )}
 
@@ -110,17 +113,21 @@ export default async function SkaterPage({
       </Card>
 
       <div className="grid grid-cols-2 gap-3 text-hud">
-        <Stat icon={Trophy} label="XP total" value={String(totalXp)} />
-        <Stat icon={Flame} label="Streak" value={`${streak}d`} />
-        <Stat icon={Activity} label="Sessões/mês" value={String(monthSessions.length)} />
-        <Stat icon={ListChecks} label="Na base / Arsenal" value={`${naBase} / ${arsenal}`} />
+        <Stat icon={Trophy} label={t("skater.xp_total")} value={String(totalXp)} />
+        <Stat icon={Flame} label={t("skater.streak")} value={`${streak}d`} />
+        <Stat icon={Activity} label={t("skater.month_sessions")} value={String(monthSessions.length)} />
+        <Stat icon={ListChecks} label={t("skater.base_arsenal")} value={`${naBase} / ${arsenal}`} />
       </div>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">
-            {today.slice(0, 7)} — {monthSessions.length}{" "}
-            {monthSessions.length === 1 ? "sessão" : "sessões"}
+            {tf(
+              monthSessions.length === 1
+                ? t("skater.month_sessions_one")
+                : t("skater.month_sessions_other"),
+              { month: today.slice(0, 7), n: monthSessions.length },
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>

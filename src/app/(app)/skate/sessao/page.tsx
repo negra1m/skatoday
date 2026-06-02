@@ -14,6 +14,8 @@ import { LogSwipeRow } from "@/components/ui/log-swipe-row";
 import { deleteSessionTrickAction, deleteSkateSessionAction } from "../../actions";
 import { todayISO, formatDateInTz } from "@/lib/utils";
 import { FlowGauge } from "@/components/hud/FlowGauge";
+import { getT, getLocale } from "@/lib/i18n/server";
+import { tf, t as tFn } from "@/lib/i18n/dict";
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -60,14 +62,19 @@ async function addTrickLog(formData: FormData) {
   redirect(`/skate/sessao?d=${date}`);
 }
 
-function formatHeaderDate(iso: string, tz: string): { title: string; subtitle: string } {
+function formatHeaderDate(
+  iso: string,
+  tz: string,
+  locale: "pt-BR" | "en" | "zh-CN",
+): { title: string; subtitle: string } {
   const today = todayISO(tz);
   const ystDate = new Date(Date.now() - 86400000);
   const ystISO = formatDateInTz(ystDate, tz);
-  if (iso === today) return { title: "Sessão de hoje", subtitle: iso };
-  if (iso === ystISO) return { title: "Sessão de ontem", subtitle: iso };
+  if (iso === today) return { title: tFn(locale, "sk.title_today"), subtitle: iso };
+  if (iso === ystISO) return { title: tFn(locale, "sk.title_yesterday"), subtitle: iso };
   const [y, m, d] = iso.split("-");
-  return { title: `Sessão de ${d}/${m}/${y}`, subtitle: iso };
+  const pretty = locale === "en" ? `${m}/${d}/${y}` : locale === "zh-CN" ? `${y}-${m}-${d}` : `${d}/${m}/${y}`;
+  return { title: tf(tFn(locale, "sk.title_on"), { date: pretty }), subtitle: iso };
 }
 
 export default async function SessaoPage({
@@ -76,6 +83,8 @@ export default async function SessaoPage({
   searchParams: Promise<{ d?: string }>;
 }) {
   const session = (await getCurrentSession())!;
+  const t = await getT();
+  const locale = await getLocale();
   const tz = session.user.timezone;
   const sp = await searchParams;
   const targetDate = normalizeDate(sp.d ?? null, tz);
@@ -83,7 +92,7 @@ export default async function SessaoPage({
   const existing = getSessionByDate(session.profile.id, targetDate);
   const tricks = listTricks(session.profile.id);
   const logs = existing ? listSessionTricks(existing.id) : [];
-  const header = formatHeaderDate(targetDate, tz);
+  const header = formatHeaderDate(targetDate, tz, locale);
 
   // Atalhos rápidos: hoje, ontem (no fuso do user)
   const yesterdayISO = formatDateInTz(new Date(Date.now() - 86400000), tz);
@@ -99,7 +108,7 @@ export default async function SessaoPage({
           <DeleteButton
             action={deleteSkateSessionAction}
             id={existing.id}
-            message="Deletar a sessão inteira? Vai apagar todos os registros de tricks junto."
+            message={t("sk.confirm_delete_session")}
             size="md"
           />
         )}
@@ -116,7 +125,7 @@ export default async function SessaoPage({
                 : "border border-input bg-secondary text-muted-foreground hover:text-foreground")
             }
           >
-            Hoje
+            {t("common.today")}
           </a>
           <a
             href={`/skate/sessao?d=${yesterdayISO}`}
@@ -127,12 +136,12 @@ export default async function SessaoPage({
                 : "border border-input bg-secondary text-muted-foreground hover:text-foreground")
             }
           >
-            Ontem
+            {t("common.yesterday")}
           </a>
           <form action="/skate/sessao" method="get" className="flex flex-1 items-center gap-2">
             <Input type="date" name="d" defaultValue={targetDate} max={today} className="flex-1" />
             <Button type="submit" variant="outline" size="sm">
-              Ir
+              {t("common.ok")}
             </Button>
           </form>
         </CardContent>
@@ -140,14 +149,14 @@ export default async function SessaoPage({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Como foi</CardTitle>
+          <CardTitle className="text-base">{t("sk.how_was")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={saveSession} className="space-y-3">
             <input type="hidden" name="date" value={targetDate} />
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="duration">Duração (min)</Label>
+                <Label htmlFor="duration">{t("sk.duration")}</Label>
                 <Input
                   id="duration"
                   name="duration"
@@ -157,13 +166,13 @@ export default async function SessaoPage({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="location">Local</Label>
+                <Label htmlFor="location">{t("sk.location")}</Label>
                 <Input id="location" name="location" defaultValue={existing?.location ?? ""} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="session_type">Tipo</Label>
+                <Label htmlFor="session_type">{t("sk.type")}</Label>
                 <Select id="session_type" name="session_type" defaultValue={existing?.sessionType ?? "livre"}>
                   <option value="">—</option>
                   <option value="flow">flow</option>
@@ -172,7 +181,7 @@ export default async function SessaoPage({
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="flow_state">Flow</Label>
+                <Label htmlFor="flow_state">{t("sk.flow")}</Label>
                 <Select id="flow_state" name="flow_state" defaultValue={existing?.flowState ?? ""}>
                   <option value="">—</option>
                   <option value="travado">travado</option>
@@ -184,7 +193,7 @@ export default async function SessaoPage({
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="feeling">Feeling</Label>
+                <Label htmlFor="feeling">{t("sk.feeling")}</Label>
                 <Input
                   id="feeling"
                   name="feeling"
@@ -195,7 +204,7 @@ export default async function SessaoPage({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="confidence">Confiança</Label>
+                <Label htmlFor="confidence">{t("sk.confidence")}</Label>
                 <Input
                   id="confidence"
                   name="confidence"
@@ -206,7 +215,7 @@ export default async function SessaoPage({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="pain">Dor</Label>
+                <Label htmlFor="pain">{t("sk.pain")}</Label>
                 <Input
                   id="pain"
                   name="pain"
@@ -218,12 +227,12 @@ export default async function SessaoPage({
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="notes">Notas</Label>
+              <Label htmlFor="notes">{t("common.notes")}</Label>
               <Textarea id="notes" name="notes" defaultValue={existing?.notes ?? ""} rows={3} />
             </div>
             <FlowGauge state={existing?.flowState ?? null} />
             <Button type="submit" className="w-full">
-              Salvar
+              {t("common.save")}
             </Button>
           </form>
         </CardContent>
@@ -231,44 +240,44 @@ export default async function SessaoPage({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Adicionar trick treinada</CardTitle>
+          <CardTitle className="text-base">{t("sk.add_trick_logged")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={addTrickLog} className="space-y-3">
             <input type="hidden" name="date" value={targetDate} />
             <div className="space-y-1">
-              <Label htmlFor="trick_id">Trick</Label>
+              <Label htmlFor="trick_id">{t("sk.trick")}</Label>
               <Select id="trick_id" name="trick_id" required defaultValue="">
                 <option value="" disabled>
-                  selecione
+                  —
                 </option>
-                {tricks.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} · {t.status}
+                {tricks.map((tk) => (
+                  <option key={tk.id} value={tk.id}>
+                    {tk.name} · {tk.status}
                   </option>
                 ))}
               </Select>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="attempts">Tentativas</Label>
+                <Label htmlFor="attempts">{t("sk.attempts")}</Label>
                 <Input id="attempts" name="attempts" type="number" min={0} defaultValue={0} required />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="lands">Acertos</Label>
+                <Label htmlFor="lands">{t("sk.lands")}</Label>
                 <Input id="lands" name="lands" type="number" min={0} defaultValue={0} required />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="best_streak">Maior streak</Label>
+                <Label htmlFor="best_streak">{t("sk.best_streak")}</Label>
                 <Input id="best_streak" name="best_streak" type="number" min={0} defaultValue={0} required />
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="trick_notes">Notas</Label>
-              <Textarea id="trick_notes" name="notes" rows={2} placeholder="faltou levantar joelho..." />
+              <Label htmlFor="trick_notes">{t("common.notes")}</Label>
+              <Textarea id="trick_notes" name="notes" rows={2} placeholder={t("sk.trick_notes_placeholder")} />
             </div>
             <Button type="submit" className="w-full">
-              Registrar trick
+              {t("sk.btn_register_trick")}
             </Button>
           </form>
         </CardContent>
@@ -277,7 +286,7 @@ export default async function SessaoPage({
       {logs.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Treinadas ({logs.length})</CardTitle>
+            <CardTitle className="text-base">{t("sk.trained_today")} ({logs.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {logs.map((l) => (
@@ -285,14 +294,14 @@ export default async function SessaoPage({
                 key={l.st.id}
                 id={l.st.id}
                 deleteAction={deleteSessionTrickAction}
-                confirmMessage="Deletar esse registro?"
+                confirmMessage={t("sk.confirm_delete_trick_log")}
               >
                 <div className="flex items-center justify-between gap-2 border border-border bg-card px-3 py-2">
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium">{l.trick.name}</div>
                     <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                       {l.st.lands}/{l.st.attempts} · streak {l.st.bestStreak}
-                      {l.st.isBaseRun && " · NA BASE"}
+                      {l.st.isBaseRun && ` · ${t("sk.in_base")}`}
                     </div>
                     {l.st.notes && <div className="mt-0.5 text-xs text-muted-foreground">{l.st.notes}</div>}
                   </div>

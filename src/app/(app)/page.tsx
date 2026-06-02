@@ -20,9 +20,11 @@ import { listActiveProjectNames } from "@/db/projects";
 import { computeStreak, dailyScore } from "@/lib/xp";
 import { todayISO } from "@/lib/utils";
 import { listRoutineItems } from "@/db/routine";
+import { getT } from "@/lib/i18n/server";
 
 export default async function DashboardPage() {
   const session = (await getCurrentSession())!;
+  const t = await getT();
   const today = todayISO(session.user.timezone);
   const [yyyy, mm] = today.split("-").map(Number);
 
@@ -64,15 +66,15 @@ export default async function DashboardPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Hoje</CardTitle>
+          <CardTitle className="text-base">{t("dash.today")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <DailyScore value={score} />
           <FlowGauge state={todaySession?.flowState ?? null} />
           <div className="grid grid-cols-3 gap-3 pt-1 text-hud">
-            <Stat label="Streak" value={`${streak}d`} />
-            <Stat label="Peso" value={body?.weightKg ? `${body.weightKg}kg` : "—"} />
-            <Stat label="Energia" value={body?.energy ? `${body.energy}/10` : "—"} />
+            <Stat label={t("dash.streak")} value={`${streak}d`} />
+            <Stat label={t("dash.weight")} value={body?.weightKg ? `${body.weightKg}kg` : "—"} />
+            <Stat label={t("dash.energy")} value={body?.energy ? `${body.energy}/10` : "—"} />
           </div>
         </CardContent>
       </Card>
@@ -81,21 +83,23 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base">
-              Urgentes
+              {t("dash.urgent_tasks")}
               {tStats.overdue > 0 && (
-                <span className="ml-2 text-xs text-red-400">{tStats.overdue} atrasada{tStats.overdue > 1 ? "s" : ""}</span>
+                <span className="ml-2 text-xs text-red-400">
+                  {tStats.overdue} {tStats.overdue === 1 ? t("dash.overdue_short_one").replace("{n}", "") : t("dash.overdue_short_other").replace("{n}", "")}
+                </span>
               )}
             </CardTitle>
             <Link
               href="/tarefas"
               className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
             >
-              Ver todas
+              {t("common.see_all")}
             </Link>
           </CardHeader>
           <CardContent className="space-y-2">
-            {urgent.map((t) => (
-              <TaskCard key={t.id} task={t} projectOptions={projectOptions} />
+            {urgent.map((task) => (
+              <TaskCard key={task.id} task={task} projectOptions={projectOptions} />
             ))}
           </CardContent>
         </Card>
@@ -104,8 +108,10 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-base">
-            {today.slice(0, 7)} — {monthSessions.length}{" "}
-            {monthSessions.length === 1 ? "sessão" : "sessões"}
+            {today.slice(0, 7)} — {(monthSessions.length === 1
+              ? t("dash.month_sessions_one")
+              : t("dash.month_sessions_other")
+            ).replace("{n}", String(monthSessions.length))}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -115,14 +121,16 @@ export default async function DashboardPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Hoje você...</CardTitle>
+          <CardTitle className="text-base">{t("dash.today_did")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <QuickRow label="Skate" done={!!todaySession} href="/skate/sessao" />
-          <QuickRow label="Corpo" done={!!body && body.date === today} href="/corpo" />
-          <QuickRow label="Corrida" done={ranToday} href="/corrida" />
-          <QuickRow label="Jiu" done={jiuToday} href="/jiu" />
-          <QuickRow label="Rotina" done={routinePct >= 1} href="/rotina" />
+          <QuickRow label={t("nav.skate")} done={!!todaySession} href="/skate/sessao" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
+          <QuickRow label={t("body.title")} done={!!body && body.date === today} href="/corpo" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
+          <QuickRow label={t("eu.run")} done={ranToday} href="/corrida" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
+          {session.user.role === "admin" && (
+            <QuickRow label={t("eu.jiu")} done={jiuToday} href="/jiu" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
+          )}
+          <QuickRow label={t("eu.routine")} done={routinePct >= 1} href="/rotina" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
         </CardContent>
       </Card>
 
@@ -131,13 +139,13 @@ export default async function DashboardPage() {
           href="/skate/sessao"
           className="flex h-12 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
         >
-          Registrar sessão
+          {t("dash.btn_log_session")}
         </Link>
         <Link
           href="/tarefas"
           className="flex h-12 items-center justify-center rounded-md border border-input bg-secondary text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
         >
-          Tarefas {tStats.open > 0 && `(${tStats.open})`}
+          {t("dash.btn_tasks")} {tStats.open > 0 && `(${tStats.open})`}
         </Link>
       </div>
     </div>
@@ -154,7 +162,19 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function QuickRow({ label, done, href }: { label: string; done: boolean; href: string }) {
+function QuickRow({
+  label,
+  done,
+  href,
+  doneLabel,
+  pendingLabel,
+}: {
+  label: string;
+  done: boolean;
+  href: string;
+  doneLabel: string;
+  pendingLabel: string;
+}) {
   return (
     <Link
       href={href}
@@ -168,7 +188,7 @@ function QuickRow({ label, done, href }: { label: string; done: boolean; href: s
             : "text-[10px] uppercase tracking-widest text-muted-foreground"
         }
       >
-        {done ? "ok" : "pendente"}
+        {done ? doneLabel : pendingLabel}
       </span>
     </Link>
   );

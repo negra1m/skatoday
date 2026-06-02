@@ -12,6 +12,8 @@ import { LogSwipeRow } from "@/components/ui/log-swipe-row";
 import { WeightChart } from "@/components/hud/WeightChart";
 import { deleteBodyLogAction } from "../actions";
 import { todayISO } from "@/lib/utils";
+import { getT } from "@/lib/i18n/server";
+import { tf } from "@/lib/i18n/dict";
 
 async function save(formData: FormData) {
   "use server";
@@ -39,35 +41,36 @@ async function save(formData: FormData) {
 
 export default async function CorpoPage() {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const logs = listBodyLogs(s.profile.id);
   const last = logs[0];
 
   return (
     <div className="space-y-4">
-      <h1 className="text-hud text-2xl font-semibold">Corpo</h1>
+      <h1 className="text-hud text-2xl font-semibold">{t("body.title")}</h1>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Log de hoje</CardTitle>
+          <CardTitle className="text-base">{t("body.today_log")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={save} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <Field name="weightKg" label="Peso (kg)" defaultValue={last?.weightKg} step="0.1" />
-              <Field name="bodyFatPct" label="Gordura %" defaultValue={last?.bodyFatPct} step="0.1" />
-              <Field name="visceralFat" label="Visceral" defaultValue={last?.visceralFat} step="0.1" />
-              <Field name="muscleMassKg" label="Músculo (kg)" defaultValue={last?.muscleMassKg} step="0.1" />
-              <Field name="waterPct" label="Água %" defaultValue={last?.waterPct} step="0.1" />
-              <Field name="sleepHours" label="Sono (h)" defaultValue={last?.sleepHours} step="0.5" />
-              <Field name="energy" label="Energia 1-10" defaultValue={last?.energy} step="1" />
-              <Field name="mood" label="Humor 1-10" defaultValue={last?.mood} step="1" />
+              <Field name="weightKg" label={t("body.weight")} defaultValue={last?.weightKg} step="0.1" />
+              <Field name="bodyFatPct" label={t("body.fat_pct")} defaultValue={last?.bodyFatPct} step="0.1" />
+              <Field name="visceralFat" label={t("body.visceral")} defaultValue={last?.visceralFat} step="0.1" />
+              <Field name="muscleMassKg" label={t("body.muscle")} defaultValue={last?.muscleMassKg} step="0.1" />
+              <Field name="waterPct" label={t("body.water_pct")} defaultValue={last?.waterPct} step="0.1" />
+              <Field name="sleepHours" label={t("body.sleep_h")} defaultValue={last?.sleepHours} step="0.5" />
+              <Field name="energy" label={t("body.energy_10")} defaultValue={last?.energy} step="1" />
+              <Field name="mood" label={t("body.mood_10")} defaultValue={last?.mood} step="1" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="notes">Notas</Label>
+              <Label htmlFor="notes">{t("common.notes")}</Label>
               <Textarea id="notes" name="notes" rows={2} />
             </div>
             <Button type="submit" className="w-full">
-              Salvar
+              {t("common.save")}
             </Button>
           </form>
         </CardContent>
@@ -76,7 +79,7 @@ export default async function CorpoPage() {
       {logs.filter((l) => l.weightKg != null).length >= 2 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Evolução do peso</CardTitle>
+            <CardTitle className="text-base">{t("body.evolution")}</CardTitle>
           </CardHeader>
           <CardContent>
             <WeightChart
@@ -91,7 +94,7 @@ export default async function CorpoPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Histórico ({logs.length})</CardTitle>
+          <CardTitle className="text-base">{tf(t("body.history_n"), { n: logs.length })}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {logs.map((l) => (
@@ -100,14 +103,14 @@ export default async function CorpoPage() {
               id={l.id}
               editHref={`/corpo/${l.id}`}
               deleteAction={deleteBodyLogAction}
-              confirmMessage="Deletar esse log?"
+              confirmMessage={t("body.confirm_delete")}
             >
               <div className="border border-border bg-card px-3 py-2">
                 <div className="text-hud text-xs uppercase tracking-widest text-muted-foreground">{l.date}</div>
                 <div className="text-sm">
                   {l.weightKg ? `${l.weightKg}kg` : "—"}
-                  {l.bodyFatPct ? ` · ${l.bodyFatPct}% gordura` : ""}
-                  {l.energy ? ` · energia ${l.energy}` : ""}
+                  {l.bodyFatPct ? ` · ${l.bodyFatPct}% ${t("body.fat_short")}` : ""}
+                  {l.energy ? ` · ${t("body.energy_short")} ${l.energy}` : ""}
                 </div>
                 {l.notes && <div className="mt-0.5 text-xs text-muted-foreground">{l.notes}</div>}
               </div>

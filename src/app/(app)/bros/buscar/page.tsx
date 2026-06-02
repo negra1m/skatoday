@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { sendFriendRequestAction } from "../actions";
+import { getT } from "@/lib/i18n/server";
 
 export default async function BuscarBrosPage({
   searchParams,
@@ -13,6 +14,7 @@ export default async function BuscarBrosPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const s = (await getCurrentSession())!;
+  const t = await getT();
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const results = q ? searchUsersByUsername(q, s.user.id) : [];
@@ -20,9 +22,9 @@ export default async function BuscarBrosPage({
   return (
     <div className="space-y-4">
       <Link href="/bros" className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        ← Bros
+        ← {t("bros.title")}
       </Link>
-      <h1 className="text-hud text-2xl font-semibold">Buscar bros</h1>
+      <h1 className="text-hud text-2xl font-semibold">{t("bros.search_title")}</h1>
 
       <Card>
         <CardContent className="pt-4">
@@ -32,12 +34,12 @@ export default async function BuscarBrosPage({
               <Input
                 name="q"
                 defaultValue={q}
-                placeholder="@username"
+                placeholder={t("bros.search_placeholder")}
                 autoFocus
                 className="pl-9"
               />
             </div>
-            <Button type="submit">Buscar</Button>
+            <Button type="submit">{t("bros.search_button")}</Button>
           </form>
         </CardContent>
       </Card>
@@ -47,8 +49,8 @@ export default async function BuscarBrosPage({
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
               {results.length === 0
-                ? `Nenhum usuário com "${q}"`
-                : `${results.length} resultado${results.length > 1 ? "s" : ""}`}
+                ? t("bros.search_no_result").replace("{q}", q)
+                : `${results.length}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -70,17 +72,17 @@ export default async function BuscarBrosPage({
                   </div>
                   {status === "accepted" ? (
                     <span className="text-[10px] uppercase tracking-widest text-emerald-400">
-                      já é bro
+                      {t("bros.already_bro")}
                     </span>
                   ) : status === "pending" ? (
                     <span className="text-[10px] uppercase tracking-widest text-amber-400">
-                      pendente
+                      {t("bros.pending")}
                     </span>
                   ) : (
                     <form action={sendFriendRequestAction}>
                       <input type="hidden" name="addresseeId" value={u.id} />
                       <Button type="submit" size="sm">
-                        <UserPlus className="h-3.5 w-3.5" /> Adicionar bro
+                        <UserPlus className="h-3.5 w-3.5" /> {t("bros.add")}
                       </Button>
                     </form>
                   )}
