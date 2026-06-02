@@ -5,7 +5,7 @@ import { db, schema } from "@/db/client";
 import { createResetRequest } from "@/lib/auth";
 import { buildResetEmail, sendMail } from "@/lib/mail";
 import { getLocale, getT } from "@/lib/i18n/server";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -77,9 +77,9 @@ export default async function EsqueciSenhaPage({
               <Label htmlFor="email">{t("auth.email")}</Label>
               <Input id="email" name="email" type="email" required autoComplete="email" />
             </div>
-            <Button type="submit" className="w-full">
+            <SubmitButton className="w-full" pendingLabel="...">
               {t("auth.reset.title")}
-            </Button>
+            </SubmitButton>
           </form>
         )}
 

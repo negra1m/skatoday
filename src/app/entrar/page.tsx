@@ -5,7 +5,7 @@ import { db, schema } from "@/db/client";
 import { getCurrentUser, issueSession, verifyPassword } from "@/lib/auth";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -84,9 +84,9 @@ export default async function EntrarPage({
             />
           </div>
           {erro === "invalido" && <p className="text-xs text-destructive">{t("auth.invalid")}</p>}
-          <Button type="submit" className="w-full">
+          <SubmitButton className="w-full" pendingLabel="...">
             {t("auth.signin")}
-          </Button>
+          </SubmitButton>
         </form>
 
         <div className="flex items-center justify-between text-xs">

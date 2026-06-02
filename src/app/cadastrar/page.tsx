@@ -5,7 +5,7 @@ import { db, schema } from "@/db/client";
 import { hashPassword, issueSession } from "@/lib/auth";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -141,9 +141,9 @@ export default async function CadastrarPage({
             }}
           />
           {erroMsg && <p className="text-xs text-destructive">{erroMsg}</p>}
-          <Button type="submit" className="w-full">
+          <SubmitButton className="w-full" pendingLabel="...">
             {t("auth.signup")}
-          </Button>
+          </SubmitButton>
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
