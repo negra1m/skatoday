@@ -31,6 +31,20 @@ export function listSessionsInMonth(profileId: string, yearMonth: string) {
     .all();
 }
 
+/** Sessões a partir de uma data (YYYY-MM-DD). Útil pra streaks que cruzam mês. */
+export function listSessionsSince(profileId: string, sinceDate: string) {
+  return db
+    .select()
+    .from(schema.skateSessions)
+    .where(
+      and(
+        eq(schema.skateSessions.profileId, profileId),
+        sql`${schema.skateSessions.date} >= ${sinceDate}`,
+      ),
+    )
+    .all();
+}
+
 export function getSessionByDate(profileId: string, date: string) {
   return db
     .select()

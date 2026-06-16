@@ -1,4 +1,5 @@
 import type { SessionTrick, Trick } from "@/db/schema";
+import { formatDateInTz } from "@/lib/utils";
 
 export type TrickStatus = Trick["status"];
 
@@ -56,12 +57,11 @@ export function computeStreak(dates: string[]) {
   const set = new Set(dates);
   let streak = 0;
   const cur = new Date();
-  cur.setHours(0, 0, 0, 0);
   while (true) {
-    const iso = cur.toISOString().slice(0, 10);
+    const iso = formatDateInTz(cur);
     if (!set.has(iso)) break;
     streak += 1;
-    cur.setDate(cur.getDate() - 1);
+    cur.setUTCDate(cur.getUTCDate() - 1);
   }
   return streak;
 }
