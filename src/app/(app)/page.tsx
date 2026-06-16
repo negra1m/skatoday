@@ -4,6 +4,7 @@ import {
   getSessionByDate,
   latestBodyLog,
   listSessionsInMonth,
+  listSessionsSince,
   listSessionTricksByMonth,
   listRoutineForDate,
   listRuns,
@@ -58,7 +59,11 @@ export default async function DashboardPage() {
     tasksDoneToday: tStats.doneToday,
   });
 
-  const streak = computeStreak(monthSessions.map((s) => s.date));
+  // Streak precisa cruzar virada de mês: pega últimos 90 dias.
+  const streakStart = new Date();
+  streakStart.setUTCDate(streakStart.getUTCDate() - 90);
+  const recentSessions = listSessionsSince(session.profile.id, streakStart.toISOString().slice(0, 10));
+  const streak = computeStreak(recentSessions.map((s) => s.date));
   const urgent = urgentTasks(session.profile.id, 5);
   const projectOptions = listActiveProjectNames(session.user.id);
 

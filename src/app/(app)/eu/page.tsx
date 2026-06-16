@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Users } from "lucide-react";
+import { Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Users, User } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
@@ -20,6 +20,13 @@ export default async function EuPage() {
   const waterPct = Math.min(100, Math.round(((waterLog?.mlDrunk ?? 0) / waterGoalMl) * 100));
 
   const sections: Array<{ href: string; icon: typeof Dumbbell; label: string; hint: string }> = [];
+
+  sections.push({
+    href: `/skater/${encodeURIComponent(s.user.username)}`,
+    icon: User,
+    label: t("eu.my_card"),
+    hint: t("eu.my_card_hint"),
+  });
 
   // Pro admin, Skate fica acessível via /eu (não está no BottomNav admin)
   if (isAdmin) {

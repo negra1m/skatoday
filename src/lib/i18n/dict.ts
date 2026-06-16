@@ -213,6 +213,8 @@ export const DICT = {
     "eu.jiu_empty": "Sem treinos ainda",
     "eu.routine": "Rotina do dia",
     "eu.routine_hint": "Tarefas da casa + treino",
+    "eu.my_card": "Minha ficha",
+    "eu.my_card_hint": "XP, streak e histórico de meses",
 
     // corpo
     "body.title": "Corpo",
@@ -443,6 +445,8 @@ export const DICT = {
     "eu.jiu_empty": "No trainings yet",
     "eu.routine": "Daily routine",
     "eu.routine_hint": "Chores + training",
+    "eu.my_card": "My card",
+    "eu.my_card_hint": "XP, streak and month history",
 
     // body
     "body.title": "Body",
@@ -673,6 +677,8 @@ export const DICT = {
     "eu.jiu_empty": "尚无训练",
     "eu.routine": "每日例行",
     "eu.routine_hint": "家务 + 训练",
+    "eu.my_card": "我的资料",
+    "eu.my_card_hint": "XP、连续、月度历史",
 
     // body
     "body.title": "身体",

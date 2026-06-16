@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Activity, Flame, ListChecks, Trophy } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight, Flame, ListChecks, Trophy } from "lucide-react";
 import { getCurrentSession } from "@/lib/session";
 import {
   areFriends,
@@ -10,6 +10,7 @@ import {
 } from "@/db/friends";
 import {
   listSessionsInMonth,
+  listSessionsSince,
   listSessionTricksByMonth,
   listTricks,
 } from "@/db/queries";
@@ -22,14 +23,25 @@ import { todayISO } from "@/lib/utils";
 import { getT } from "@/lib/i18n/server";
 import { tf } from "@/lib/i18n/dict";
 
+const YM_RE = /^\d{4}-\d{2}$/;
+
+function shiftMonth(ym: string, delta: number): string {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 export default async function SkaterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ m?: string }>;
 }) {
   const s = (await getCurrentSession())!;
   const t = await getT();
   const { username } = await params;
+  const sp = await searchParams;
   const target = findUserByUsername(decodeURIComponent(username));
   if (!target) notFound();
 
@@ -84,16 +96,30 @@ export default async function SkaterPage({
   const naBase = tricks.filter((t) => t.status === "na_base" || t.status === "arsenal").length;
   const arsenal = tricks.filter((t) => t.status === "arsenal").length;
 
-  const today = todayISO(s.user.timezone);
-  const [yyyy, mm] = today.split("-").map(Number);
-  const monthSessions = listSessionsInMonth(profile.id, today.slice(0, 7));
-  const streak = computeStreak(monthSessions.map((m) => m.date));
-  const tricksByDate = listSessionTricksByMonth(profile.id, today.slice(0, 7));
+  const today = todayISO();
+  const currentYm = today.slice(0, 7);
+  const ymParam = sp.m && YM_RE.test(sp.m) ? sp.m : currentYm;
+  const ym = ymParam > currentYm ? currentYm : ymParam;
+  const [yyyy, mm] = ym.split("-").map(Number);
+  const monthSessions = listSessionsInMonth(profile.id, ym);
+
+  // Streak sempre baseado nos últimos 90 dias até hoje, independente do mês visualizado.
+  const streakStart = new Date();
+  streakStart.setUTCDate(streakStart.getUTCDate() - 90);
+  const recentSessions = listSessionsSince(profile.id, streakStart.toISOString().slice(0, 10));
+  const streak = computeStreak(recentSessions.map((m) => m.date));
+
+  const tricksByDate = listSessionTricksByMonth(profile.id, ym);
   const cells = monthSessions.map((m) => {
     const dur = m.durationMinutes ?? 0;
     const intensity = (dur >= 90 ? 4 : dur >= 60 ? 3 : dur >= 30 ? 2 : 1) as 0 | 1 | 2 | 3 | 4;
     return { date: m.date, intensity, tricksCount: tricksByDate.get(m.date) ?? 0 };
   });
+
+  const prevYm = shiftMonth(ym, -1);
+  const nextYm = shiftMonth(ym, 1);
+  const canGoNext = nextYm <= currentYm;
+  const baseHref = `/skater/${encodeURIComponent(target.username)}`;
 
   return (
     <div className="space-y-4">
@@ -121,12 +147,34 @@ export default async function SkaterPage({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">
-            {tf(
-              monthSessions.length === 1
-                ? t("skater.month_sessions_one")
-                : t("skater.month_sessions_other"),
-              { month: today.slice(0, 7), n: monthSessions.length },
+          <CardTitle className="flex items-center justify-between gap-2 text-base">
+            <Link
+              href={`${baseHref}?m=${prevYm}`}
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={prevYm}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+            <span className="text-center">
+              {tf(
+                monthSessions.length === 1
+                  ? t("skater.month_sessions_one")
+                  : t("skater.month_sessions_other"),
+                { month: ym, n: monthSessions.length },
+              )}
+            </span>
+            {canGoNext ? (
+              <Link
+                href={`${baseHref}?m=${nextYm}`}
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                aria-label={nextYm}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <span className="rounded-md p-1 text-muted-foreground/30">
+                <ChevronRight className="h-4 w-4" />
+              </span>
             )}
           </CardTitle>
         </CardHeader>
