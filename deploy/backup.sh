@@ -15,10 +15,14 @@ BACKUP_FILE="${BACKUP_DIR}/skatoday-${TIMESTAMP}.db"
 
 mkdir -p "${BACKUP_DIR}"
 
-# Usa o comando .backup do sqlite3 dentro do container — seguro mesmo com WAL ativo.
-docker exec "${CONTAINER}" sh -c \
-  "cd /app/data && cp skatoday.db /tmp/skatoday-snapshot.db && \
-   command -v sqlite3 >/dev/null 2>&1 || true"
+# O banco roda em WAL. Um `cp` cru do .db pode não conter as transações que ainda
+# estão no -wal, gerando um backup silenciosamente desatualizado.
+# Por isso: força um checkpoint TRUNCATE antes de copiar, o que drena o WAL para
+# dentro do .db e deixa o arquivo principal consistente e completo por si só.
+# Não há sqlite3 CLI na imagem — usa-se o better-sqlite3 que já está em /app/node_modules.
+docker exec "${CONTAINER}" node -e 'const D=require("better-sqlite3");const d=new D("/app/data/skatoday.db");const r=d.pragma("wal_checkpoint(TRUNCATE)");console.log("checkpoint:",JSON.stringify(r));d.close();'
+
+docker exec "${CONTAINER}" sh -c "cp /app/data/skatoday.db /tmp/skatoday-snapshot.db"
 
 # Copia o snapshot pra fora
 docker cp "${CONTAINER}:/tmp/skatoday-snapshot.db" "${BACKUP_FILE}"

@@ -1,0 +1,2 @@
+@schema=body.v1
+@fields=date,weight_kg,body_fat_pct,visceral_fat,muscle_mass_kg,water_pct,energy,mood,sleep_hours,notes
