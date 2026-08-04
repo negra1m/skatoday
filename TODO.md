@@ -14,6 +14,7 @@
 - Swipe-to-action on list cards
 - PWA installable
 - Docker deploy + daily backup cron + push cron
+- Paid traffic ops per client (admin-only): campaigns, editable checklist, daily log, leads
 
 ## Next
 
