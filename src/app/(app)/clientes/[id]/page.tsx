@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ExternalLink, Key, Link as LinkIcon, ImageIcon, FolderKanban } from "lucide-react";
+import { ExternalLink, Key, Link as LinkIcon, ImageIcon, FolderKanban, Megaphone, ChevronRight } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getClient } from "@/db/crm";
+import { listCampaigns } from "@/db/traffic";
 import { listActiveProjectNames, listProjects, listProjectsOfClient } from "@/db/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const data = getClient(user.id, id);
   if (!data) notFound();
   const { client, secrets, links, images } = data;
+  const campaigns = listCampaigns(client.id);
+  const activeCampaigns = campaigns.filter((c) => c.status === "ativa").length;
   const linkedProjects = listProjectsOfClient(client.id);
   const allUserProjects = listProjects(user.id);
   const linkedIds = new Set(linkedProjects.map((p) => p.id));
@@ -56,6 +59,26 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           size="md"
         />
       </div>
+
+      {/* Tráfego pago */}
+      <Link href={`/clientes/${client.id}/trafego`} className="block">
+        <Card className="transition-colors hover:bg-muted/40">
+          <CardContent className="flex items-center justify-between gap-3 py-3">
+            <div className="flex items-center gap-2.5">
+              <Megaphone className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Tráfego pago</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {campaigns.length === 0
+                    ? "Nenhuma operação ainda"
+                    : `${campaigns.length} operação(ões) · ${activeCampaigns} ativa(s)`}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Dados básicos */}
       <Card>

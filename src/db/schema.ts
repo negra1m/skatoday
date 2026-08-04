@@ -393,6 +393,121 @@ export const friendships = sqliteTable(
 export type Friendship = typeof friendships.$inferSelect;
 export type NewFriendship = typeof friendships.$inferInsert;
 
+// ---------------------------------------------------------------------------
+// Tráfego pago (admin-only) — vive pendurado em `clients`, sem tocar em
+// nenhuma tabela por profile. Nada disso aparece pra usuário comum.
+// ---------------------------------------------------------------------------
+
+export const trafficCampaigns = sqliteTable("traffic_campaigns", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  propertyRef: text("property_ref"),          // ex: CHV191
+  propertyUrl: text("property_url"),
+  priceBrl: real("price_brl"),
+  dailyBudgetBrl: real("daily_budget_brl"),
+  monthlyBudgetBrl: real("monthly_budget_brl"),
+  commissionPct: real("commission_pct"),      // 5 ou 10, conforme faixa do imóvel
+  objective: text("objective"),               // ex: Conversas no WhatsApp
+  status: text("status", { enum: ["planejando", "ativa", "pausada", "encerrada"] })
+    .notNull()
+    .default("planejando"),
+  startedAt: text("started_at"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const trafficChecklistItems = sqliteTable("traffic_checklist_items", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  campaignId: text("campaign_id")
+    .notNull()
+    .references(() => trafficCampaigns.id, { onDelete: "cascade" }),
+  section: text("section", { enum: ["setup", "diaria", "semanal"] }).notNull(),
+  label: text("label").notNull(),
+  detail: text("detail"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  archivedAt: text("archived_at"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+/**
+ * `period` define a recorrência do check:
+ *   setup   → "once"        (uma vez só na vida da campanha)
+ *   diaria  → "YYYY-MM-DD"  (dia)
+ *   semanal → "YYYY-MM-DD"  (segunda-feira daquela semana)
+ */
+export const trafficChecks = sqliteTable(
+  "traffic_checks",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    campaignId: text("campaign_id")
+      .notNull()
+      .references(() => trafficCampaigns.id, { onDelete: "cascade" }),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => trafficChecklistItems.id, { onDelete: "cascade" }),
+    period: text("period").notNull(),
+    done: integer("done", { mode: "boolean" }).notNull().default(false),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqItemPeriod: uniqueIndex("traffic_checks_item_period").on(table.itemId, table.period),
+  }),
+);
+
+export const trafficDailyLogs = sqliteTable(
+  "traffic_daily_logs",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    campaignId: text("campaign_id")
+      .notNull()
+      .references(() => trafficCampaigns.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    spendBrl: real("spend_brl"),
+    conversations: integer("conversations"),
+    notes: text("notes"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqCampaignDate: uniqueIndex("traffic_daily_logs_campaign_date").on(
+      table.campaignId,
+      table.date,
+    ),
+  }),
+);
+
+export const trafficLeads = sqliteTable("traffic_leads", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  campaignId: text("campaign_id")
+    .notNull()
+    .references(() => trafficCampaigns.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  sourceRef: text("source_ref"),              // campanha/imóvel de origem
+  stage: text("stage", {
+    enum: ["novo", "contato", "visita", "proposta", "vendido", "perdido"],
+  })
+    .notNull()
+    .default("novo"),
+  registeredInCrm: integer("registered_in_crm", { mode: "boolean" }).notNull().default(false),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type TrafficCampaign = typeof trafficCampaigns.$inferSelect;
+export type NewTrafficCampaign = typeof trafficCampaigns.$inferInsert;
+export type TrafficChecklistItem = typeof trafficChecklistItems.$inferSelect;
+export type TrafficCheck = typeof trafficChecks.$inferSelect;
+export type TrafficDailyLog = typeof trafficDailyLogs.$inferSelect;
+export type TrafficLead = typeof trafficLeads.$inferSelect;
+export type NewTrafficLead = typeof trafficLeads.$inferInsert;
+
 export type Trick = typeof tricks.$inferSelect;
 export type NewTrick = typeof tricks.$inferInsert;
 export type SkateSession = typeof skateSessions.$inferSelect;
