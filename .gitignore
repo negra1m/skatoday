@@ -55,3 +55,31 @@ coverage/
 
 # typescript
 *.tsbuildinfo
+
+# capacitor — assets copiados no sync (gerados, nao versionar)
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/capacitor.plugins.json
+
+# android — build local e SDK path
+android/.gradle/
+android/local.properties
+android/app/release/
+android/keystore.properties
+
+# ios — dependencias nativas
+ios/App/Pods/
+ios/App/output/
+ios/App/build/
+
+# assinatura — NUNCA commitar
+*.jks
+*.keystore
+*.mobileprovision
+*.p8
+*.p12
+google-services.json
+GoogleService-Info.plist

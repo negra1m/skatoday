@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { NativeBridge } from "@/components/native/NativeBridge";
 
 export const metadata: Metadata = {
   title: "skatoday",
@@ -24,7 +25,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className="dark">
-      <body className="min-h-screen bg-background text-foreground antialiased">{children}</body>
+      <body className="min-h-screen bg-background text-foreground antialiased">
+        <NativeBridge />
+        {children}
+      </body>
     </html>
   );
 }

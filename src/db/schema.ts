@@ -518,3 +518,101 @@ export type JiuSession = typeof jiuSessions.$inferSelect;
 export type RoutineCheck = typeof routineChecks.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
 export type AccessCode = typeof accessCodes.$inferSelect;
+
+// ── Academia ────────────────────────────────────────────────────────────────
+// Modelo em 4 camadas, espelhando tricks → skate_sessions → session_tricks:
+//   exercises          catálogo de exercícios do perfil
+//   workouts           treinos montados (Upper A, Full body, Upper B...)
+//   workout_exercises  o template: séries e faixa de reps de cada exercício
+//   gym_sessions       execução de um treino num dia
+//   gym_sets           cada série feita, com carga e reps — é o que alimenta
+//                      a regra de progressão de carga
+
+export const exercises = sqliteTable("exercises", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  profileId: text("profile_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  muscleGroup: text("muscle_group", {
+    enum: [
+      "peito",
+      "costas",
+      "ombro",
+      "biceps",
+      "triceps",
+      "perna",
+      "posterior",
+      "panturrilha",
+      "abdomen",
+      "outro",
+    ],
+  })
+    .notNull()
+    .default("outro"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const workouts = sqliteTable("workouts", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  profileId: text("profile_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  // 0=domingo ... 6=sábado. Null = treino sem dia fixo.
+  weekday: integer("weekday"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  archivedAt: text("archived_at"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const workoutExercises = sqliteTable("workout_exercises", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  workoutId: text("workout_id")
+    .notNull()
+    .references(() => workouts.id, { onDelete: "cascade" }),
+  exerciseId: text("exercise_id")
+    .notNull()
+    .references(() => exercises.id, { onDelete: "cascade" }),
+  sets: integer("sets").notNull().default(3),
+  repMin: integer("rep_min").notNull().default(8),
+  repMax: integer("rep_max").notNull().default(12),
+  // Carga de trabalho atual. Sobe quando a faixa fecha em todas as séries.
+  targetWeightKg: real("target_weight_kg"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  notes: text("notes"),
+});
+
+export const gymSessions = sqliteTable(
+  "gym_sessions",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    // Treino usado como base. Vira null se o treino for apagado — o
+    // histórico de séries continua valendo.
+    workoutId: text("workout_id").references(() => workouts.id, { onDelete: "set null" }),
+    date: text("date").notNull(),
+    durationMinutes: integer("duration_minutes"),
+    notes: text("notes"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqProfileDate: uniqueIndex("gym_sessions_profile_date").on(table.profileId, table.date),
+  }),
+);
+
+export const gymSets = sqliteTable("gym_sets", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => gymSessions.id, { onDelete: "cascade" }),
+  exerciseId: text("exercise_id")
+    .notNull()
+    .references(() => exercises.id, { onDelete: "cascade" }),
+  setNumber: integer("set_number").notNull(),
+  weightKg: real("weight_kg"),
+  reps: integer("reps"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
