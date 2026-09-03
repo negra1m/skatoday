@@ -123,6 +123,41 @@ crontab -e
 # Add: * * * * * /path/to/skatoday/deploy/push-cron.sh
 ```
 
+## Mobile (iOS / Android)
+
+The native apps are Capacitor shells around the deployed Next server — the
+pages are server components and the mutations are server actions, so there is
+no static bundle to embed. The WebView loads `server.url` from
+`capacitor.config.ts`; `capacitor-shell/` is only the offline fallback screen.
+
+- Bundle ID: `com.fewcompany.skatoday`
+- Server URL: set `CAPACITOR_SERVER_URL` before syncing (defaults to
+  `https://skatoday.fewcompany.com`)
+
+```bash
+# after changing capacitor.config.ts or installing a plugin
+npm run cap:sync
+
+# open the native IDEs
+npm run cap:android    # requires Android Studio
+npm run cap:ios        # requires macOS + Xcode
+
+# release artifacts (Android)
+npm run android:apk    # direct install
+npm run android:aab    # Play Store upload
+```
+
+Requirements not present on a plain Windows box: **Android Studio** (bundles
+JDK + SDK) for Android builds, and **macOS + Xcode** for iOS — iOS cannot be
+compiled or signed on Windows.
+
+Still open before store submission:
+- PNG app icons and splash (`public/icons/` only has SVG, which Android
+  adaptive icons and Xcode asset catalogs do not accept)
+- Native push via FCM/APNs — the current Web Push/VAPID setup does not work
+  reliably inside the Capacitor WebView
+- Signing keystore (Android) and Apple Developer account (iOS)
+
 ## License
 
 AGPL-3.0

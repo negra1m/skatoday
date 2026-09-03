@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>skatoday</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px
+          max(24px, env(safe-area-inset-bottom));
+        background: #0a0a0b;
+        color: #e5e5e7;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        text-align: center;
+      }
+      .bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #a855f7, #3b82f6, #ec4899);
+      }
+      h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 8px;
+      }
+      p {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #8e8e93;
+        margin: 0 0 24px;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(90deg, #a855f7, #3b82f6);
+      }
+      button:active {
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar"></div>
+    <main>
+      <h1>Sem conexao</h1>
+      <p>Nao foi possivel alcancar o servidor do skatoday.<br />Verifique sua internet e tente de novo.</p>
+      <button onclick="location.reload()">Tentar novamente</button>
+    </main>
+  </body>
+</html>

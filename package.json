@@ -12,6 +12,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios",
+    "android:apk": "cd android && gradlew.bat assembleRelease",
+    "android:aab": "cd android && gradlew.bat bundleRelease",
     "user:create": "tsx src/db/cli-users.ts create",
     "user:list": "tsx src/db/cli-users.ts list",
     "user:reset": "tsx src/db/cli-users.ts reset",
@@ -19,6 +24,14 @@
     "user:promote": "tsx src/db/cli-users.ts promote"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@types/nodemailer": "^8.0.0",
     "@types/web-push": "^3.6.4",
     "bcryptjs": "^3.0.3",
@@ -39,6 +52,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^22.8.7",
     "@types/react": "^18.3.12",
