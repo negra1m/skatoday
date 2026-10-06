@@ -22,7 +22,13 @@ type SpeechRecognitionLike = {
   stop: () => void;
 };
 
-export function VoiceCapture({ onTranscript }: { onTranscript: (text: string) => void }) {
+export function VoiceCapture({
+  onTranscript,
+  autoStart = false,
+}: {
+  onTranscript: (text: string) => void;
+  autoStart?: boolean;
+}) {
   const [listening, setListening] = React.useState(false);
   const [interim, setInterim] = React.useState("");
   const [supported, setSupported] = React.useState(true);
@@ -68,10 +74,12 @@ export function VoiceCapture({ onTranscript }: { onTranscript: (text: string) =>
       }
     };
     r.onend = () => {
+      if (recRef.current !== r) return;
       setListening(false);
       setInterim("");
     };
     r.onerror = () => {
+      if (recRef.current !== r) return;
       setListening(false);
       setInterim("");
     };
@@ -84,6 +92,21 @@ export function VoiceCapture({ onTranscript }: { onTranscript: (text: string) =>
     recRef.current?.stop();
     setListening(false);
   };
+
+  React.useEffect(() => {
+    if (!autoStart) return;
+    const w = window as unknown as {
+      SpeechRecognition?: unknown;
+      webkitSpeechRecognition?: unknown;
+    };
+    if (w.SpeechRecognition || w.webkitSpeechRecognition) start();
+    return () => {
+      const r = recRef.current;
+      recRef.current = null;
+      r?.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!supported) return null;
 

@@ -21,6 +21,7 @@ type Props = {
   projectOptions: string[];
   controlledOpen?: boolean;
   onClose?: () => void;
+  autoDictate?: boolean;
 };
 
 export function TaskModal({
@@ -32,6 +33,7 @@ export function TaskModal({
   projectOptions,
   controlledOpen,
   onClose,
+  autoDictate = false,
 }: Props) {
   const [open, setOpen] = React.useState(controlledOpen ?? false);
   const [title, setTitle] = React.useState(task?.title ?? "");
@@ -42,7 +44,7 @@ export function TaskModal({
   }, [controlledOpen]);
 
   React.useEffect(() => {
-    if (mode !== "create") return;
+    if (mode !== "create" || autoDictate) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         const target = e.target as HTMLElement;
@@ -59,7 +61,7 @@ export function TaskModal({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [mode]);
+  }, [mode, autoDictate]);
 
   return (
     <Dialog
@@ -109,7 +111,7 @@ export function TaskModal({
             />
           </div>
 
-          <VoiceCapture onTranscript={(t) => setTitle((prev) => (prev ? prev + " " + t : t))} />
+          <VoiceCapture autoStart={autoDictate} onTranscript={(t) => setTitle((prev) => (prev ? prev + " " + t : t))} />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">

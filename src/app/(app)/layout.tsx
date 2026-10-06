@@ -3,6 +3,10 @@ import { getCurrentSession } from "@/lib/auth";
 import { BottomNav } from "@/components/hud/BottomNav";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
 import { getLocale, getT } from "@/lib/i18n/server";
+import { Mic } from "lucide-react";
+import { TaskModal } from "@/components/tasks/TaskModal";
+import { listActiveProjectNames } from "@/db/projects";
+import { createTaskAction } from "./tarefas/actions";
 
 async function logout() {
   "use server";
@@ -51,6 +55,26 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           me: t("nav.me"),
           clients: t("nav.clients"),
         }}
+      />
+      <TaskModal
+        mode="create"
+        autoDictate
+        action={createTaskAction}
+        projectOptions={listActiveProjectNames(session.user.id)}
+        trigger={
+          <button
+            type="button"
+            aria-label="Ditar tarefa"
+            className="fixed bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full text-white transition-transform active:scale-95"
+            style={{
+              right: "max(1rem, calc((100vw - 28rem) / 2 + 1rem))",
+              background: "hsl(var(--neon-purple))",
+              boxShadow: "0 0 16px hsl(var(--neon-purple) / 0.6)",
+            }}
+          >
+            <Mic className="h-6 w-6" />
+          </button>
+        }
       />
       <footer className="fixed bottom-16 left-0 right-0 z-10 pointer-events-none flex justify-center pb-1">
         <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-2.5 py-1 text-[9px] uppercase tracking-widest text-muted-foreground backdrop-blur">
