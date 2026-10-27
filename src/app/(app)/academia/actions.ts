@@ -4,19 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth";
 import { todayISO } from "@/lib/utils";
-import type { MuscleGroup } from "@/lib/gym";
 import {
-  addWorkoutExercise,
-  createWorkout,
   deleteGymSession,
-  deleteWorkout,
+  getProfileLevel,
   logSet,
-  removeWorkoutExercise,
-  seedProgramIfEmpty,
+  seedCalisthenicsProgram,
+  setCalisthenicsLevel,
   startSession,
   updateGymSession,
-  updateWorkout,
-  updateWorkoutExercise,
 } from "@/db/gym";
 
 async function requireSession() {
@@ -39,6 +34,26 @@ function str(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
 }
 
+// ── Programa ────────────────────────────────────────────────────────────────
+
+export async function seedProgramAction() {
+  const s = await requireSession();
+  seedCalisthenicsProgram(s.profile.id);
+  revalidatePath("/academia");
+}
+
+export async function levelUpAction() {
+  const s = await requireSession();
+  setCalisthenicsLevel(s.profile.id, getProfileLevel(s.profile.id) + 1);
+  revalidatePath("/academia");
+}
+
+export async function levelDownAction() {
+  const s = await requireSession();
+  setCalisthenicsLevel(s.profile.id, getProfileLevel(s.profile.id) - 1);
+  revalidatePath("/academia");
+}
+
 // ── Sessão ──────────────────────────────────────────────────────────────────
 
 export async function startSessionAction(formData: FormData) {
@@ -54,44 +69,32 @@ export async function startSessionAction(formData: FormData) {
 }
 
 /**
- * Salva todas as séries de um exercício de uma vez. O form manda
- * weight-1/reps-1, weight-2/reps-2... — um par por série.
+ * Salva todas as séries de um exercício de uma vez. Cada série manda
+ * val-i (reps OU segundos, conforme a unidade) e rpe-i. O campo `unit` diz
+ * como interpretar o valor.
  */
 export async function logExerciseSetsAction(formData: FormData) {
   const s = await requireSession();
   const sessionId = str(formData, "sessionId");
   const exerciseId = str(formData, "exerciseId");
+  const unit = str(formData, "unit");
   const setCount = num(formData, "setCount") ?? 0;
   if (!sessionId || !exerciseId) return;
 
   for (let i = 1; i <= setCount; i++) {
+    const value = num(formData, `val-${i}`);
     logSet({
       profileId: s.profile.id,
       sessionId,
       exerciseId,
       setNumber: i,
-      weightKg: num(formData, `weight-${i}`),
-      reps: num(formData, `reps-${i}`),
+      reps: unit === "seg" ? null : value,
+      seconds: unit === "seg" ? value : null,
+      rpe: num(formData, `rpe-${i}`),
     });
   }
 
   revalidatePath(`/academia/sessao/${sessionId}`);
-}
-
-/** Aplica a carga sugerida no template, pra próxima sessão já vir com ela. */
-export async function bumpTargetWeightAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutExerciseId = str(formData, "workoutExerciseId");
-  const sessionId = str(formData, "sessionId");
-  const weight = num(formData, "weight");
-  if (!workoutExerciseId || weight == null) return;
-  updateWorkoutExercise({
-    profileId: s.profile.id,
-    workoutExerciseId,
-    targetWeightKg: weight,
-  });
-  if (sessionId) revalidatePath(`/academia/sessao/${sessionId}`);
-  revalidatePath("/academia");
 }
 
 export async function finishSessionAction(formData: FormData) {
@@ -114,88 +117,4 @@ export async function deleteGymSessionAction(formData: FormData) {
   if (!sessionId) return;
   deleteGymSession({ profileId: s.profile.id, sessionId });
   revalidatePath("/academia");
-}
-
-// ── Treinos ─────────────────────────────────────────────────────────────────
-
-export async function seedProgramAction() {
-  const s = await requireSession();
-  seedProgramIfEmpty(s.profile.id);
-  revalidatePath("/academia");
-}
-
-export async function createWorkoutAction(formData: FormData) {
-  const s = await requireSession();
-  const name = str(formData, "name");
-  if (!name) return;
-  const weekday = num(formData, "weekday");
-  const workout = createWorkout({ profileId: s.profile.id, name, weekday });
-  revalidatePath("/academia");
-  redirect(`/academia/treino/${workout.id}`);
-}
-
-export async function updateWorkoutAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutId = str(formData, "workoutId");
-  if (!workoutId) return;
-  const weekdayRaw = str(formData, "weekday");
-  updateWorkout({
-    profileId: s.profile.id,
-    workoutId,
-    name: str(formData, "name") || undefined,
-    weekday: weekdayRaw === "" ? null : Number(weekdayRaw),
-  });
-  revalidatePath(`/academia/treino/${workoutId}`);
-  revalidatePath("/academia");
-}
-
-export async function deleteWorkoutAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutId = str(formData, "id");
-  if (!workoutId) return;
-  deleteWorkout({ profileId: s.profile.id, workoutId });
-  revalidatePath("/academia");
-  redirect("/academia");
-}
-
-export async function addWorkoutExerciseAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutId = str(formData, "workoutId");
-  const name = str(formData, "name");
-  if (!workoutId || !name) return;
-  addWorkoutExercise({
-    profileId: s.profile.id,
-    workoutId,
-    name,
-    group: (str(formData, "group") || "outro") as MuscleGroup,
-    sets: num(formData, "sets") ?? 3,
-    repMin: num(formData, "repMin") ?? 8,
-    repMax: num(formData, "repMax") ?? 12,
-  });
-  revalidatePath(`/academia/treino/${workoutId}`);
-}
-
-export async function updateWorkoutExerciseAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutExerciseId = str(formData, "workoutExerciseId");
-  const workoutId = str(formData, "workoutId");
-  if (!workoutExerciseId) return;
-  updateWorkoutExercise({
-    profileId: s.profile.id,
-    workoutExerciseId,
-    sets: num(formData, "sets") ?? undefined,
-    repMin: num(formData, "repMin") ?? undefined,
-    repMax: num(formData, "repMax") ?? undefined,
-    targetWeightKg: num(formData, "targetWeightKg"),
-  });
-  if (workoutId) revalidatePath(`/academia/treino/${workoutId}`);
-}
-
-export async function removeWorkoutExerciseAction(formData: FormData) {
-  const s = await requireSession();
-  const workoutExerciseId = str(formData, "id");
-  const workoutId = str(formData, "workoutId");
-  if (!workoutExerciseId) return;
-  removeWorkoutExercise({ profileId: s.profile.id, workoutExerciseId });
-  if (workoutId) revalidatePath(`/academia/treino/${workoutId}`);
 }
