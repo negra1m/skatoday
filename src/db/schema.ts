@@ -43,6 +43,9 @@ export const profiles = sqliteTable("profiles", {
   heightCm: integer("height_cm"),
   startingWeightKg: real("starting_weight_kg"),
   goal: text("goal"),
+  // Nível atual no programa de calistenia: 0 Reinício ... 5 Avançado, 6 Master.
+  // Subida controlada por checklist manual (critério de saída do nível).
+  calisthenicsLevel: integer("calisthenics_level").notNull().default(0),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -550,6 +553,34 @@ export const exercises = sqliteTable("exercises", {
   })
     .notNull()
     .default("outro"),
+  // ── Metadados de calistenia (peso corporal) ──────────────────────────────
+  // Padrão de movimento do exercício.
+  pattern: text("pattern", {
+    enum: [
+      "agachar",
+      "unilateral",
+      "dobrar_quadril",
+      "empurrar_h",
+      "empurrar_v",
+      "puxar_h",
+      "puxar_v",
+      "core",
+      "condicionamento",
+      "locomocao",
+      "skill",
+    ],
+  }),
+  // Faixa de nível em que o exercício costuma entrar (0..6). maxLevel null = até Master.
+  minLevel: integer("min_level"),
+  maxLevel: integer("max_level"),
+  // Como a dose é medida: repetições, segundos (isometria/caminhada) ou rounds.
+  unit: text("unit", { enum: ["reps", "seg", "rounds"] })
+    .notNull()
+    .default("reps"),
+  execucao: text("execucao"),
+  errosComuns: text("erros_comuns"),
+  regressao: text("regressao"),
+  progressao: text("progressao"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -561,6 +592,10 @@ export const workouts = sqliteTable("workouts", {
   name: text("name").notNull(),
   // 0=domingo ... 6=sábado. Null = treino sem dia fixo.
   weekday: integer("weekday"),
+  // Nível de calistenia a que o treino pertence (0..6). Null = treino avulso do usuário.
+  level: integer("level"),
+  // Rótulo do bloco dentro do nível (A, B, C, D). Null = sem bloco.
+  block: text("block"),
   sortOrder: integer("sort_order").notNull().default(0),
   archivedAt: text("archived_at"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -614,5 +649,9 @@ export const gymSets = sqliteTable("gym_sets", {
   setNumber: integer("set_number").notNull(),
   weightKg: real("weight_kg"),
   reps: integer("reps"),
+  // Isometria/condicionamento: tempo da série em segundos (prancha, hang, caminhada).
+  seconds: integer("seconds"),
+  // Esforço percebido 4..10 (escala da apostila). Guia a dupla progressão.
+  rpe: integer("rpe"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
