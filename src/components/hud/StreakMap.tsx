@@ -7,6 +7,7 @@ type Cell = {
   date: string;
   intensity: 0 | 1 | 2 | 3 | 4;
   tricksCount: number;
+  durationMinutes?: number | null;
 };
 
 const INTENSITY_STYLE: Record<Cell["intensity"], string> = {
@@ -20,7 +21,13 @@ const INTENSITY_STYLE: Record<Cell["intensity"], string> = {
 function tooltipText(c: Cell): string {
   const [y, m, d] = c.date.split("-");
   const dm = `${d}/${m}`;
-  if (c.tricksCount === 0) return `Sem tricks · ${dm}`;
+  // intensity 0 = nenhuma sessão naquele dia; ≥1 = treino registrado (com ou sem trick).
+  if (c.tricksCount === 0) {
+    if (c.intensity === 0) return `Sem treino · ${dm}`;
+    return c.durationMinutes
+      ? `Treino feito · ${c.durationMinutes}min · ${dm}`
+      : `Treino feito · ${dm}`;
+  }
   if (c.tricksCount === 1) return `1 trick em ${dm}`;
   return `${c.tricksCount} tricks em ${dm}`;
 }

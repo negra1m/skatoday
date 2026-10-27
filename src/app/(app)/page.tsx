@@ -34,7 +34,12 @@ export default async function DashboardPage() {
   const cells = monthSessions.map((s) => {
     const dur = s.durationMinutes ?? 0;
     const intensity = (dur >= 90 ? 4 : dur >= 60 ? 3 : dur >= 30 ? 2 : 1) as 0 | 1 | 2 | 3 | 4;
-    return { date: s.date, intensity, tricksCount: tricksByDate.get(s.date) ?? 0 };
+    return {
+      date: s.date,
+      intensity,
+      tricksCount: tricksByDate.get(s.date) ?? 0,
+      durationMinutes: s.durationMinutes ?? null,
+    };
   });
 
   const todaySession = getSessionByDate(session.profile.id, today);
