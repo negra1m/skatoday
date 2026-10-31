@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth";
 import { todayISO } from "@/lib/utils";
+import { placeLevel } from "@/lib/gym";
 import {
   deleteGymSession,
   getProfileLevel,
@@ -51,6 +52,19 @@ export async function levelUpAction() {
 export async function levelDownAction() {
   const s = await requireSession();
   setCalisthenicsLevel(s.profile.id, getProfileLevel(s.profile.id) - 1);
+  revalidatePath("/academia");
+}
+
+/** Teste de colocação: posiciona no nível pelo padrão mais fraco. */
+export async function placementAction(formData: FormData) {
+  const s = await requireSession();
+  const level = placeLevel({
+    squat: num(formData, "squat") ?? 0,
+    push: num(formData, "push") ?? 0,
+    pull: num(formData, "pull") ?? 0,
+    hang: num(formData, "hang") ?? 0,
+  });
+  setCalisthenicsLevel(s.profile.id, level);
   revalidatePath("/academia");
 }
 

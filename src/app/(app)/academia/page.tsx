@@ -1,23 +1,28 @@
 import Link from "next/link";
-import { ChevronDown, ChevronUp, Dumbbell } from "lucide-react";
+import { ChevronDown, ChevronUp, Dumbbell, Target } from "lucide-react";
 import { getCurrentSession } from "@/lib/session";
 import {
+  ensureTestWorkouts,
   getProfileLevel,
   hasProgram,
   listGymSessions,
   listWorkoutExercises,
   listWorkoutsForLevel,
+  testResult,
 } from "@/db/gym";
-import { LEVELS, MAX_LEVEL, RPE_SCALE, levelInfo } from "@/lib/gym";
+import { LEVELS, RPE_SCALE, TEST_BLOCK, UNIT_LABEL, levelInfo } from "@/lib/gym";
 import { todayISO } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LogSwipeRow } from "@/components/ui/log-swipe-row";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   deleteGymSessionAction,
   levelDownAction,
   levelUpAction,
+  placementAction,
   seedProgramAction,
   startSessionAction,
 } from "./actions";
@@ -35,10 +40,14 @@ export default async function AcademiaPage() {
     );
   }
 
+  // Heal: cria os testes de passagem se o perfil foi semeado antes deles.
+  ensureTestWorkouts(s.profile.id);
+
   const level = getProfileLevel(s.profile.id);
   const info = levelInfo(level);
-  const blocks = listWorkoutsForLevel(s.profile.id, level);
+  const blocks = listWorkoutsForLevel(s.profile.id, level).filter((b) => b.block !== TEST_BLOCK);
   const counts = new Map(blocks.map((b) => [b.id, listWorkoutExercises(b.id).length]));
+  const test = testResult(s.profile.id, level);
   const sessions = listGymSessions(s.profile.id);
   const todaySession = sessions.find((r) => r.session.date === today);
 
@@ -108,45 +117,115 @@ export default async function AcademiaPage() {
         </CardContent>
       </Card>
 
-      {/* Critério de saída / subir de nível */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Subir de nível</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Critério de saída do nível {level}
-          </p>
-          <ul className="space-y-1 text-sm">
-            {info.exitCriteria.map((c) => (
-              <li key={c} className="flex gap-2">
-                <span className="text-muted-foreground">▢</span>
-                <span>{c}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-muted-foreground">
-            Progressão é por critério, não por calendário. Só suba quando cumprir tudo com técnica
-            estável e sem dor.
-          </p>
-          <div className="flex gap-2 pt-1">
-            {level < MAX_LEVEL && (
-              <form action={levelUpAction} className="flex-1">
+      {/* Teste de passagem (gate) */}
+      {test ? (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="h-4 w-4 text-primary" />
+              Teste de passagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Bata todas as metas num treino pra liberar o nível {level + 1}. Não passou? Repete o
+              nível e tenta de novo.
+            </p>
+            <ul className="space-y-1 text-sm">
+              {test.items.map((i) => (
+                <li key={i.name} className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <span className={i.best == null ? "text-muted-foreground" : i.ok ? "text-primary" : "text-red-400"}>
+                      {i.best == null ? "▢" : i.ok ? "✓" : "✗"}
+                    </span>
+                    {i.name}
+                  </span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {i.best != null ? `${i.best}/` : ""}
+                    {i.target} {UNIT_LABEL[i.unit]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <form action={startSessionAction}>
+              <input type="hidden" name="workoutId" value={test.workoutId} />
+              <SubmitButton variant="secondary" className="w-full" pendingLabel="Abrindo...">
+                {test.hasAttempt ? "Refazer o teste" : "Fazer o teste de passagem"}
+              </SubmitButton>
+            </form>
+
+            {test.passed ? (
+              <form action={levelUpAction}>
                 <SubmitButton className="w-full">
                   <ChevronUp className="mr-1 h-4 w-4" />
-                  Subir pro nível {level + 1}
+                  Passou! Subir pro nível {level + 1}
                 </SubmitButton>
               </form>
+            ) : (
+              test.hasAttempt && (
+                <p className="text-xs text-red-400">
+                  Ainda não passou — faltou:{" "}
+                  {test.items.filter((i) => !i.ok).map((i) => i.name).join(", ")}. Repete o nível.
+                </p>
+              )
             )}
+
             {level > 0 && (
-              <form action={levelDownAction}>
+              <form action={levelDownAction} className="pt-1">
                 <SubmitButton variant="ghost" size="sm">
                   <ChevronDown className="mr-1 h-4 w-4" />
-                  Descer
+                  Descer de nível
                 </SubmitButton>
               </form>
             )}
-          </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="space-y-2 py-4">
+            <p className="text-sm">Nível Master — topo da progressão.</p>
+            <p className="text-xs text-muted-foreground">
+              Não há teste acima: aqui é escolher a dose certa pro objetivo certo.
+            </p>
+            {level > 0 && (
+              <form action={levelDownAction} className="pt-1">
+                <SubmitButton variant="ghost" size="sm">
+                  <ChevronDown className="mr-1 h-4 w-4" />
+                  Descer de nível
+                </SubmitButton>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Teste de colocação */}
+      <Card>
+        <CardContent className="py-3">
+          <details>
+            <summary className="cursor-pointer text-[10px] uppercase tracking-widest text-muted-foreground">
+              Teste de colocação (refazer meu nível)
+            </summary>
+            <form action={placementAction} className="space-y-3 pt-3">
+              <p className="text-xs text-muted-foreground">
+                Seus melhores números de hoje. O nível sai do padrão mais fraco — cardio não entra,
+                força relativa é outro eixo.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <PlaceField name="squat" label="Agachamentos livres" />
+                <PlaceField name="push" label="Flexões no chão" />
+                <PlaceField name="pull" label="Pull-ups livres" />
+                <PlaceField name="hang" label="Hang (segundos)" />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Sem pull-up? Deixe 0 e preencha o hang. Isso sobrescreve seu nível atual.
+              </p>
+              <SubmitButton className="w-full" variant="outline" pendingLabel="Calculando...">
+                Calcular meu nível
+              </SubmitButton>
+            </form>
+          </details>
         </CardContent>
       </Card>
 
@@ -207,6 +286,15 @@ export default async function AcademiaPage() {
   );
 }
 
+function PlaceField({ name, label }: { name: string; label: string }) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={name}>{label}</Label>
+      <Input id={name} name={name} type="number" min={0} inputMode="numeric" defaultValue="" placeholder="0" />
+    </div>
+  );
+}
+
 /** Primeira visita: apresenta o programa de calistenia antes de gravar nada. */
 function EmptyProgram() {
   return (
@@ -216,8 +304,9 @@ function EmptyProgram() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Progressão de peso corporal do sedentário ao nível Master. Você começa no Reinício e sobe
-          por critério, não por calendário.
+          Progressão de peso corporal do sedentário ao nível Master. Depois de carregar, faça o teste
+          de colocação pra pular os níveis que já estão abaixo de você — e suba passando no teste de
+          cada nível.
         </p>
         <div className="space-y-2">
           {LEVELS.map((l) => (
