@@ -1,6 +1,15 @@
 import { and, asc, desc, eq, isNotNull, isNull, ne } from "drizzle-orm";
 import { db, schema } from "./client";
-import { EXERCISES, PROGRAMS, MAX_LEVEL } from "@/lib/gym";
+import {
+  BENCHMARKS,
+  EXERCISE_BY_KEY,
+  EXERCISES,
+  LEVELS,
+  MAX_LEVEL,
+  PROGRAMS,
+  TEST_BLOCK,
+  type ExDef,
+} from "@/lib/gym";
 
 type GymSet = typeof schema.gymSets.$inferSelect;
 
@@ -341,6 +350,36 @@ export function seedCalisthenicsProgram(profileId: string) {
             .run();
         });
       }
+
+      // Teste de passagem do nível → treino com bloco "T", 1 série por meta.
+      const bench = BENCHMARKS[program.level];
+      if (bench && bench.length) {
+        const test = tx
+          .insert(schema.workouts)
+          .values({
+            profileId,
+            name: `Teste de passagem — ${LEVELS[program.level].name}`,
+            level: program.level,
+            block: TEST_BLOCK,
+            sortOrder: 100 + program.level,
+          })
+          .returning()
+          .get();
+        bench.forEach((b, i) => {
+          const exerciseId = idByKey.get(b.key);
+          if (!exerciseId) return;
+          tx.insert(schema.workoutExercises)
+            .values({
+              workoutId: test.id,
+              exerciseId,
+              sets: 1,
+              repMin: b.target,
+              repMax: b.target,
+              sortOrder: i,
+            })
+            .run();
+        });
+      }
     }
 
     tx.update(schema.profiles)
@@ -350,4 +389,148 @@ export function seedCalisthenicsProgram(profileId: string) {
   });
 
   return true;
+}
+
+// ── Teste de passagem: consulta e avaliação ─────────────────────────────────
+
+export function getTestWorkout(profileId: string, level: number) {
+  return db
+    .select()
+    .from(schema.workouts)
+    .where(
+      and(
+        eq(schema.workouts.profileId, profileId),
+        eq(schema.workouts.level, level),
+        eq(schema.workouts.block, TEST_BLOCK),
+        isNull(schema.workouts.archivedAt),
+      ),
+    )
+    .get();
+}
+
+function latestSessionForWorkout(profileId: string, workoutId: string) {
+  return db
+    .select()
+    .from(schema.gymSessions)
+    .where(
+      and(eq(schema.gymSessions.profileId, profileId), eq(schema.gymSessions.workoutId, workoutId)),
+    )
+    .orderBy(desc(schema.gymSessions.date))
+    .get();
+}
+
+export type TestItem = {
+  name: string;
+  target: number;
+  unit: "reps" | "seg" | "rounds";
+  best: number | null;
+  ok: boolean;
+};
+export type TestResult = {
+  workoutId: string;
+  passed: boolean;
+  hasAttempt: boolean;
+  date: string | null;
+  items: TestItem[];
+};
+
+/**
+ * Resultado do teste de passagem do nível, a partir da sessão de teste mais
+ * recente. `passed` só quando TODAS as metas foram batidas. null se o nível
+ * não tem teste (Master).
+ */
+export function testResult(profileId: string, level: number): TestResult | null {
+  const tw = getTestWorkout(profileId, level);
+  if (!tw) return null;
+  const planned = listWorkoutExercises(tw.id);
+  const session = latestSessionForWorkout(profileId, tw.id);
+  const sets = session ? listSessionSets(session.id) : [];
+
+  const items: TestItem[] = planned.map(({ we, exercise }) => {
+    const best = sets
+      .filter((s) => s.exerciseId === exercise.id)
+      .reduce((m, s) => Math.max(m, s.reps ?? s.seconds ?? 0), 0);
+    return {
+      name: exercise.name,
+      target: we.repMax,
+      unit: exercise.unit,
+      best: session ? best : null,
+      ok: best >= we.repMax,
+    };
+  });
+
+  return {
+    workoutId: tw.id,
+    passed: !!session && items.length > 0 && items.every((i) => i.ok),
+    hasAttempt: !!session,
+    date: session?.date ?? null,
+    items,
+  };
+}
+
+/** Acha (ou cria) um exercício pelo nome, semeando os metadados de calistenia. */
+function findOrCreateExerciseByDef(profileId: string, def: ExDef): string {
+  const existing = db
+    .select({ id: schema.exercises.id })
+    .from(schema.exercises)
+    .where(and(eq(schema.exercises.profileId, profileId), eq(schema.exercises.name, def.name)))
+    .get();
+  if (existing) return existing.id;
+  const row = db
+    .insert(schema.exercises)
+    .values({
+      profileId,
+      name: def.name,
+      pattern: def.pattern,
+      minLevel: def.minLevel,
+      maxLevel: def.maxLevel,
+      unit: def.unit,
+      execucao: def.execucao,
+      errosComuns: def.errosComuns,
+      regressao: def.regressao,
+      progressao: def.progressao,
+    })
+    .returning()
+    .get();
+  return row.id;
+}
+
+/**
+ * Garante que os testes de passagem existem (perfis semeados antes dos testes
+ * entrarem). Idempotente e não destrutivo: só cria o que faltar.
+ */
+export function ensureTestWorkouts(profileId: string) {
+  for (let level = 0; level <= MAX_LEVEL; level++) {
+    const bench = BENCHMARKS[level];
+    if (!bench || !bench.length) continue;
+    if (getTestWorkout(profileId, level)) continue;
+
+    const test = db
+      .insert(schema.workouts)
+      .values({
+        profileId,
+        name: `Teste de passagem — ${LEVELS[level].name}`,
+        level,
+        block: TEST_BLOCK,
+        sortOrder: 100 + level,
+      })
+      .returning()
+      .get();
+
+    bench.forEach((b, i) => {
+      const def = EXERCISE_BY_KEY[b.key];
+      if (!def) return;
+      const exerciseId = findOrCreateExerciseByDef(profileId, def);
+      db.insert(schema.workoutExercises)
+        .values({
+          workoutId: test.id,
+          exerciseId,
+          sets: 1,
+          repMin: b.target,
+          repMax: b.target,
+          sortOrder: i,
+        })
+        .run();
+    });
+  }
 }

@@ -1048,6 +1048,83 @@ export function programForLevel(level: number): LevelProgram {
   return PROGRAMS.find((p) => p.level === lvl) ?? PROGRAMS[0];
 }
 
+// ── Teste de passagem (gate travado: repete o nível até passar) ──────────────
+// Para subir de N → N+1 é preciso bater TODAS as metas do teste do nível N.
+// As metas vêm do "critério de saída" da apostila, em número (reps ou segundos
+// conforme a unidade do exercício). Master (6) não tem teste — é o topo.
+
+export type BenchItem = { key: string; target: number };
+
+export const BENCHMARKS: Record<number, BenchItem[]> = {
+  0: [
+    { key: "sentar_levantar", target: 10 },
+    { key: "flexao_parede", target: 12 },
+    { key: "remada_faixa", target: 12 },
+    { key: "prancha_elevada", target: 20 },
+  ],
+  1: [
+    { key: "box_squat", target: 12 },
+    { key: "flexao_inclinada", target: 10 },
+    { key: "remada_invertida_alta", target: 8 },
+    { key: "hang_assistido", target: 25 },
+  ],
+  2: [
+    { key: "air_squat", target: 15 },
+    { key: "flexao_inclinada", target: 12 },
+    { key: "remada_invertida", target: 10 },
+    { key: "dead_hang", target: 60 },
+  ],
+  3: [
+    { key: "flexao_chao", target: 10 },
+    { key: "chinup_assistido", target: 6 },
+    { key: "air_squat", target: 30 },
+    { key: "prancha_chao", target: 45 },
+  ],
+  4: [
+    { key: "pullup", target: 3 },
+    { key: "flexao_chao", target: 18 },
+    { key: "dip", target: 6 },
+  ],
+  5: [
+    { key: "pullup", target: 8 },
+    { key: "dip", target: 12 },
+    { key: "flexao_chao", target: 30 },
+    { key: "air_squat", target: 40 },
+  ],
+};
+
+export function benchmarkFor(level: number): BenchItem[] {
+  return BENCHMARKS[level] ?? [];
+}
+
+/** Rótulo do bloco que marca um treino como teste de passagem. */
+export const TEST_BLOCK = "T";
+
+// ── Teste de colocação (entrada) ────────────────────────────────────────────
+// Posiciona o usuário pelo padrão mais fraco (o gargalo manda), pra não jogar
+// num nível onde a puxada/empurrar é difícil demais. Cardio não entra aqui:
+// força relativa é outro eixo.
+
+export type PlacementInput = {
+  /** Agachamentos livres contínuos. */
+  squat: number;
+  /** Flexões no chão (completas). */
+  push: number;
+  /** Pull-ups/chin-ups livres. */
+  pull: number;
+  /** Dead hang em segundos (só conta quando pull = 0). */
+  hang: number;
+};
+
+export function placeLevel(i: PlacementInput): Level {
+  const squatL = i.squat >= 40 ? 5 : i.squat >= 30 ? 4 : i.squat >= 20 ? 3 : i.squat >= 12 ? 2 : i.squat >= 8 ? 1 : 0;
+  const pushL = i.push >= 25 ? 5 : i.push >= 15 ? 4 : i.push >= 8 ? 3 : i.push >= 3 ? 2 : i.push >= 1 ? 1 : 0;
+  const pullL =
+    i.pull >= 8 ? 6 : i.pull >= 5 ? 5 : i.pull >= 3 ? 4 : i.pull >= 1 ? 3 : i.hang >= 30 ? 2 : i.hang >= 10 ? 1 : 0;
+  const placed = Math.min(squatL, pushL, pullL);
+  return Math.max(0, Math.min(MAX_LEVEL, placed)) as Level;
+}
+
 // ── Dupla progressão ────────────────────────────────────────────────────────
 // Calistenia avança nesta ordem: controle → reps → amplitude → séries →
 // alavanca mais difícil → carga. Aqui medimos só o gatilho objetivo: fechou o
