@@ -18,6 +18,7 @@ import { FlowGauge } from "@/components/hud/FlowGauge";
 import { DailyScore } from "@/components/hud/DailyScore";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { listActiveProjectNames } from "@/db/projects";
+import { getCircuitLogForDate } from "@/db/circuit";
 import { computeStreak, dailyScore } from "@/lib/xp";
 import { todayISO } from "@/lib/utils";
 import { listRoutineItems } from "@/db/routine";
@@ -53,6 +54,7 @@ export default async function DashboardPage() {
   const jiu = listJiu(session.profile.id);
   const ranToday = runs.some((r) => r.date === today);
   const jiuToday = jiu.some((j) => j.date === today);
+  const workoutToday = !!getCircuitLogForDate(session.profile.id, today)?.done;
 
   const tStats = taskStats(session.profile.id);
   const score = dailyScore({
@@ -135,6 +137,7 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           <QuickRow label={t("nav.skate")} done={!!todaySession} href="/skate/sessao" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
+          <QuickRow label={t("dash.workout")} done={workoutToday} href="/academia" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
           <QuickRow label={t("body.title")} done={!!body && body.date === today} href="/corpo" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
           <QuickRow label={t("eu.run")} done={ranToday} href="/corrida" doneLabel={t("common.ok")} pendingLabel={t("common.pending")} />
           {session.user.role === "admin" && (

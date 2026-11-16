@@ -325,6 +325,46 @@ export const clientImages = sqliteTable("client_images", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+// ── Circuito diário (halteres + chão) ────────────────────────────────────────
+// Treino único, fixo, feito todo dia. Os 4 exercícios vivem em código
+// (src/lib/circuit.ts); aqui guardamos só a config de lembrete e o check do dia.
+
+export const workoutCircuitConfigs = sqliteTable("workout_circuit_configs", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  profileId: text("profile_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" })
+    .unique(),
+  notificationsEnabled: integer("notifications_enabled", { mode: "boolean" }).notNull().default(true),
+  windowStart: text("window_start").notNull().default("08:00"),
+  windowEnd: text("window_end").notNull().default("20:00"),
+  // Quantos lembretes espalhar na janela até fazer o treino.
+  remindersPerDay: integer("reminders_per_day").notNull().default(3),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const workoutCircuitLogs = sqliteTable(
+  "workout_circuit_logs",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    date: text("date").notNull(),
+    done: integer("done", { mode: "boolean" }).notNull().default(true),
+    rounds: integer("rounds"),
+    durationMinutes: integer("duration_minutes"),
+    notes: text("notes"),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    uniqProfileDate: uniqueIndex("workout_circuit_logs_profile_date").on(table.profileId, table.date),
+  }),
+);
+
+export type WorkoutCircuitConfig = typeof workoutCircuitConfigs.$inferSelect;
+export type WorkoutCircuitLog = typeof workoutCircuitLogs.$inferSelect;
+
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
 export type ClientSecret = typeof clientSecrets.$inferSelect;

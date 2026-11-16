@@ -1110,18 +1110,25 @@ export type PlacementInput = {
   squat: number;
   /** Flexões no chão (completas). */
   push: number;
-  /** Pull-ups/chin-ups livres. */
-  pull: number;
-  /** Dead hang em segundos (só conta quando pull = 0). */
-  hang: number;
+  /** Pull-ups/chin-ups livres. `null` = não testou (sem barra). */
+  pull: number | null;
+  /** Dead hang em segundos. `null` = não testou. */
+  hang: number | null;
 };
 
 export function placeLevel(i: PlacementInput): Level {
   const squatL = i.squat >= 40 ? 5 : i.squat >= 30 ? 4 : i.squat >= 20 ? 3 : i.squat >= 12 ? 2 : i.squat >= 8 ? 1 : 0;
   const pushL = i.push >= 25 ? 5 : i.push >= 15 ? 4 : i.push >= 8 ? 3 : i.push >= 3 ? 2 : i.push >= 1 ? 1 : 0;
-  const pullL =
-    i.pull >= 8 ? 6 : i.pull >= 5 ? 5 : i.pull >= 3 ? 4 : i.pull >= 1 ? 3 : i.hang >= 30 ? 2 : i.hang >= 10 ? 1 : 0;
-  const placed = Math.min(squatL, pushL, pullL);
+  // Sem barra: pull e hang em branco = eixo "puxar" não testado. Fica de fora
+  // do mínimo em vez de zerar a colocação. Só conta quando há número real.
+  const pullTested = i.pull != null || i.hang != null;
+  const pull = i.pull ?? 0;
+  const hang = i.hang ?? 0;
+  const pullL = !pullTested
+    ? null
+    : pull >= 8 ? 6 : pull >= 5 ? 5 : pull >= 3 ? 4 : pull >= 1 ? 3 : hang >= 30 ? 2 : hang >= 10 ? 1 : 0;
+  const levels = pullL == null ? [squatL, pushL] : [squatL, pushL, pullL];
+  const placed = Math.min(...levels);
   return Math.max(0, Math.min(MAX_LEVEL, placed)) as Level;
 }
 

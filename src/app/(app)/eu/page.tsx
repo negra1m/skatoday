@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BicepsFlexed, Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Users, User } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
-import { listGymSessions } from "@/db/gym";
+import { getCircuitLogForDate } from "@/db/circuit";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
 import { listFriends, listPendingIncoming } from "@/db/friends";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,8 +15,8 @@ export default async function EuPage() {
   const body = latestBodyLog(s.profile.id);
   const runs = listRuns(s.profile.id);
   const jiu = isAdmin ? listJiu(s.profile.id) : [];
-  const gym = listGymSessions(s.profile.id, 1);
   const today = new Date().toISOString().slice(0, 10);
+  const circuitDoneToday = !!getCircuitLogForDate(s.profile.id, today)?.done;
   const waterGoalMl = getEffectiveGoalMl(s.profile.id);
   const waterLog = getWaterLogForDate(s.profile.id, today);
   const waterPct = Math.min(100, Math.round(((waterLog?.mlDrunk ?? 0) / waterGoalMl) * 100));
@@ -51,9 +51,7 @@ export default async function EuPage() {
       href: "/academia",
       icon: BicepsFlexed,
       label: t("eu.gym"),
-      hint: gym[0]
-        ? `${gym[0].workout?.name ?? "Treino livre"} · ${gym[0].session.date}`
-        : t("eu.gym_empty"),
+      hint: circuitDoneToday ? "Treino feito hoje" : "Treino de hoje pendente",
     },
     {
       href: "/agua",
