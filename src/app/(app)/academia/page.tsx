@@ -11,6 +11,8 @@ import {
   testResult,
 } from "@/db/gym";
 import { LEVELS, RPE_SCALE, TEST_BLOCK, UNIT_LABEL, levelInfo } from "@/lib/gym";
+import { CALISTENIA_ENABLED } from "@/lib/circuit";
+import { DailyCircuit } from "@/components/academia/DailyCircuit";
 import { todayISO } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +32,16 @@ import {
 export default async function AcademiaPage() {
   const s = (await getCurrentSession())!;
   const today = todayISO(s.user.timezone);
+
+  // Calistenia por níveis desligada por enquanto: a Academia é o circuito diário.
+  if (!CALISTENIA_ENABLED) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-hud text-2xl font-semibold">Academia</h1>
+        <DailyCircuit profileId={s.profile.id} today={today} />
+      </div>
+    );
+  }
 
   if (!hasProgram(s.profile.id)) {
     return (
@@ -219,7 +231,8 @@ export default async function AcademiaPage() {
                 <PlaceField name="hang" label="Hang (segundos)" />
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Sem pull-up? Deixe 0 e preencha o hang. Isso sobrescreve seu nível atual.
+                Sem barra? Deixe pull e hang em branco — o eixo puxar fica de fora e o nível sai
+                de agachar/empurrar. Isso sobrescreve seu nível atual.
               </p>
               <SubmitButton className="w-full" variant="outline" pendingLabel="Calculando...">
                 Calcular meu nível

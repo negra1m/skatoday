@@ -14,6 +14,7 @@ import {
   startSession,
   updateGymSession,
 } from "@/db/gym";
+import { setCircuitLog, toggleCircuitDone, updateCircuitConfig } from "@/db/circuit";
 
 async function requireSession() {
   const s = await getCurrentSession();
@@ -61,8 +62,8 @@ export async function placementAction(formData: FormData) {
   const level = placeLevel({
     squat: num(formData, "squat") ?? 0,
     push: num(formData, "push") ?? 0,
-    pull: num(formData, "pull") ?? 0,
-    hang: num(formData, "hang") ?? 0,
+    pull: num(formData, "pull"),
+    hang: num(formData, "hang"),
   });
   setCalisthenicsLevel(s.profile.id, level);
   revalidatePath("/academia");
@@ -130,5 +131,44 @@ export async function deleteGymSessionAction(formData: FormData) {
   const sessionId = str(formData, "id");
   if (!sessionId) return;
   deleteGymSession({ profileId: s.profile.id, sessionId });
+  revalidatePath("/academia");
+}
+
+// ── Circuito diário ───────────────────────────────────────────────────────────
+
+/** Alterna o "fiz o treino hoje". */
+export async function toggleCircuitDoneAction() {
+  const s = await requireSession();
+  toggleCircuitDone(s.profile.id, todayISO(s.user.timezone));
+  revalidatePath("/academia");
+  revalidatePath("/");
+}
+
+/** Salva voltas/duração/nota do treino de hoje (marca como feito). */
+export async function saveCircuitLogAction(formData: FormData) {
+  const s = await requireSession();
+  setCircuitLog({
+    profileId: s.profile.id,
+    date: todayISO(s.user.timezone),
+    done: true,
+    rounds: num(formData, "rounds"),
+    durationMinutes: num(formData, "durationMinutes"),
+    notes: str(formData, "notes") || null,
+  });
+  revalidatePath("/academia");
+  revalidatePath("/");
+}
+
+export async function updateCircuitConfigAction(formData: FormData) {
+  const s = await requireSession();
+  const enabled = str(formData, "notificationsEnabled") === "1";
+  const reminders = num(formData, "remindersPerDay");
+  updateCircuitConfig({
+    profileId: s.profile.id,
+    notificationsEnabled: enabled,
+    windowStart: str(formData, "windowStart") || undefined,
+    windowEnd: str(formData, "windowEnd") || undefined,
+    remindersPerDay: reminders != null ? Math.max(1, Math.min(8, Math.round(reminders))) : undefined,
+  });
   revalidatePath("/academia");
 }
