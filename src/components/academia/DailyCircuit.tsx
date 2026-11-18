@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StreakMap } from "@/components/hud/StreakMap";
 import { CircuitReminder } from "@/components/academia/CircuitReminder";
+import { CircuitTimer } from "@/components/academia/CircuitTimer";
 import { saveCircuitLogAction, toggleCircuitDoneAction } from "@/app/(app)/academia/actions";
 
 function intensityFor(rounds: number | null, minutes: number | null): 1 | 2 | 3 | 4 {
@@ -164,6 +165,8 @@ export async function DailyCircuit({
             <span>Entre exercícios: {CIRCUIT.descansoEntreSeg}</span>
             <span>Entre voltas: {CIRCUIT.descansoEntreVoltasSeg}</span>
           </div>
+
+          <CircuitTimer durationMin={CIRCUIT.duracaoMin} />
 
           <div className="space-y-2">
             {CIRCUIT.exercicios.map((ex, i) => (
