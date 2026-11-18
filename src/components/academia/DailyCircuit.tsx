@@ -166,7 +166,10 @@ export async function DailyCircuit({
             <span>Entre voltas: {CIRCUIT.descansoEntreVoltasSeg}</span>
           </div>
 
-          <CircuitTimer durationMin={CIRCUIT.duracaoMin} />
+          <CircuitTimer
+            durationMin={CIRCUIT.duracaoMin}
+            exercises={CIRCUIT.exercicios.map((e) => ({ nome: e.nome, reps: e.reps, foco: e.foco }))}
+          />
 
           <div className="space-y-2">
             {CIRCUIT.exercicios.map((ex, i) => (
