@@ -7,6 +7,9 @@
 /** Liga/desliga o programa de calistenia por níveis na aba Academia. */
 export const CALISTENIA_ENABLED = false;
 
+/** Meta da fase base: 90 treinos feitos (~3 meses de ritmo diário). */
+export const BASE_GOAL = 90;
+
 export type CircuitExercise = {
   key: string;
   nome: string;

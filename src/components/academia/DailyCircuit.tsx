@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Check, ChevronDown, Dumbbell, Flame } from "lucide-react";
 import {
+  countCircuitDone,
   ensureCircuitConfig,
   getCircuitLogForDate,
   listCircuitDoneDatesSince,
   listCircuitHistory,
 } from "@/db/circuit";
 import { latestBodyLog } from "@/db/queries";
-import { CIRCUIT, circuitStreak } from "@/lib/circuit";
+import { BASE_GOAL, CIRCUIT, circuitStreak } from "@/lib/circuit";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,9 @@ export async function DailyCircuit({
   since90.setUTCDate(since90.getUTCDate() - 120);
   const doneDates = listCircuitDoneDatesSince(profileId, since90.toISOString().slice(0, 10));
   const streak = circuitStreak(doneDates, today);
+  const totalDone = countCircuitDone(profileId);
+  const basePct = Math.min(100, Math.round((totalDone / BASE_GOAL) * 100));
+  const baseDone = totalDone >= BASE_GOAL;
   const cells = history
     .filter((h) => h.done && h.date.startsWith(monthPrefix))
     .map((h) => ({
@@ -148,7 +152,21 @@ export async function DailyCircuit({
             {streak} {streak === 1 ? "dia seguido" : "dias seguidos"}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="uppercase tracking-widest text-muted-foreground">
+                {baseDone ? "Base concluída" : "Base"}
+              </span>
+              <span className="tabular-nums">{Math.min(totalDone, BASE_GOAL)}/{BASE_GOAL} treinos</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full transition-all"
+                style={{ width: `${basePct}%`, background: "var(--neon-gradient)" }}
+              />
+            </div>
+          </div>
           <StreakMap cells={cells} year={yyyy} month={mm} />
         </CardContent>
       </Card>

@@ -109,6 +109,15 @@ export function listCircuitHistory(profileId: string, days = 30) {
     .all();
 }
 
+/** Total acumulado de dias com treino feito (meta da base: 90). */
+export function countCircuitDone(profileId: string): number {
+  return db
+    .select({ id: schema.workoutCircuitLogs.id })
+    .from(schema.workoutCircuitLogs)
+    .where(and(eq(schema.workoutCircuitLogs.profileId, profileId), eq(schema.workoutCircuitLogs.done, true)))
+    .all().length;
+}
+
 /** Datas (YYYY-MM-DD) com treino feito desde `sinceDate`, pra streak e mapa. */
 export function listCircuitDoneDatesSince(profileId: string, sinceDate: string): string[] {
   return db
