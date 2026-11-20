@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { NativeBridge } from "@/components/native/NativeBridge";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
+import { SwRegistration } from "@/components/pwa/SwRegistration";
 
 export const metadata: Metadata = {
   title: "skatoday",
@@ -27,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className="dark">
       <body className="min-h-screen bg-background text-foreground antialiased">
         <NativeBridge />
+        <SwRegistration />
+        <InstallBanner />
         {children}
       </body>
     </html>
