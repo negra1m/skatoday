@@ -3,7 +3,8 @@ import { BicepsFlexed, Dumbbell, Footprints, Swords, ListChecks, Activity, Dropl
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
 import { getCircuitLogForDate } from "@/db/circuit";
-import { planStatus } from "@/lib/plan";
+import { phaseShortLabel, planStatus } from "@/lib/plan";
+import { getPerformancePhase } from "@/db/plan";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
 import { listFriends, listPendingIncoming } from "@/db/friends";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,11 +20,12 @@ export default async function EuPage() {
   const today = new Date().toISOString().slice(0, 10);
   const circuitDoneToday = !!getCircuitLogForDate(s.profile.id, today)?.done;
   const plan = planStatus(body?.weightKg ?? null);
+  const planPhase = getPerformancePhase(s.profile.id);
   const planHint =
     plan.current == null
       ? "Defina sua meta de peso"
       : plan.nextMilestone
-        ? `${plan.phase === "corrida" ? "Corrida" : "Caminhada"} · faltam ${plan.toNextKg}kg pra ${plan.nextMilestone.kg}kg`
+        ? `${phaseShortLabel(planPhase)} · faltam ${plan.toNextKg}kg pra ${plan.nextMilestone.kg}kg`
         : "Objetivo batido";
   const waterGoalMl = getEffectiveGoalMl(s.profile.id);
   const waterLog = getWaterLogForDate(s.profile.id, today);

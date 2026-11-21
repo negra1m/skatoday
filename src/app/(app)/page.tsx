@@ -20,6 +20,7 @@ import { DailyScore } from "@/components/hud/DailyScore";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { listActiveProjectNames } from "@/db/projects";
 import { getCircuitLogForDate } from "@/db/circuit";
+import { getPerformancePhase } from "@/db/plan";
 import { computeStreak, dailyScore } from "@/lib/xp";
 import { todayISO } from "@/lib/utils";
 import { listRoutineItems } from "@/db/routine";
@@ -92,7 +93,7 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <WeightGoalCard current={body?.weightKg ?? null} />
+      <WeightGoalCard current={body?.weightKg ?? null} phase={getPerformancePhase(session.profile.id)} />
 
       {urgent.length > 0 && (
         <Card>

@@ -46,6 +46,9 @@ export const profiles = sqliteTable("profiles", {
   // Nível atual no programa de calistenia: 0 Reinício ... 5 Avançado, 6 Master.
   // Subida controlada por checklist manual (critério de saída do nível).
   calisthenicsLevel: integer("calisthenics_level").notNull().default(0),
+  // Fase do plano de performance: 1 condicionamento, 2 retorno à corrida,
+  // 3 resistência. Avança manualmente (joelho/fisio), não por peso.
+  performancePhase: integer("performance_phase").notNull().default(1),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -118,6 +121,7 @@ export const bodyLogs = sqliteTable(
       .references(() => profiles.id, { onDelete: "cascade" }),
     date: text("date").notNull(),
     weightKg: real("weight_kg"),
+    waistCm: real("waist_cm"),
     bodyFatPct: real("body_fat_pct"),
     visceralFat: real("visceral_fat"),
     muscleMassKg: real("muscle_mass_kg"),
@@ -131,6 +135,22 @@ export const bodyLogs = sqliteTable(
     uniqProfileDate: uniqueIndex("body_logs_profile_date").on(table.profileId, table.date),
   }),
 );
+
+// Fotos de acompanhamento do corpo (frente/lado/costas). Arquivo no volume
+// /app/data/uploads, servido autenticado por /uploads/[file].
+export const bodyPhotos = sqliteTable("body_photos", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  profileId: text("profile_id")
+    .notNull()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  filename: text("filename").notNull(),
+  pose: text("pose", { enum: ["frente", "lado", "costas", "outro"] }),
+  caption: text("caption"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type BodyPhoto = typeof bodyPhotos.$inferSelect;
 
 export const runs = sqliteTable("runs", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

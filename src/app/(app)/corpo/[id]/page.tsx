@@ -37,6 +37,7 @@ export default async function EditBodyLogPage({ params }: { params: Promise<{ id
             <input type="hidden" name="id" value={log.id} />
             <div className="grid grid-cols-2 gap-3">
               <Field name="weightKg" label="Peso (kg)" defaultValue={log.weightKg} step="0.1" />
+              <Field name="waistCm" label="Cintura (cm)" defaultValue={log.waistCm} step="0.5" />
               <Field name="bodyFatPct" label="Gordura %" defaultValue={log.bodyFatPct} step="0.1" />
               <Field name="visceralFat" label="Visceral" defaultValue={log.visceralFat} step="0.1" />
               <Field name="muscleMassKg" label="Músculo (kg)" defaultValue={log.muscleMassKg} step="0.1" />

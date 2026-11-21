@@ -163,6 +163,7 @@ export function logBody(input: {
   profileId: string;
   date: string;
   weightKg?: number | null;
+  waistCm?: number | null;
   bodyFatPct?: number | null;
   visceralFat?: number | null;
   muscleMassKg?: number | null;
@@ -181,6 +182,7 @@ export function logBody(input: {
     db.update(schema.bodyLogs)
       .set({
         weightKg: input.weightKg ?? existing.weightKg,
+        waistCm: input.waistCm ?? existing.waistCm,
         bodyFatPct: input.bodyFatPct ?? existing.bodyFatPct,
         visceralFat: input.visceralFat ?? existing.visceralFat,
         muscleMassKg: input.muscleMassKg ?? existing.muscleMassKg,
@@ -400,6 +402,7 @@ export function updateBodyLog(input: {
   profileId: string;
   bodyLogId: string;
   weightKg?: number | null;
+  waistCm?: number | null;
   bodyFatPct?: number | null;
   visceralFat?: number | null;
   muscleMassKg?: number | null;
@@ -412,6 +415,7 @@ export function updateBodyLog(input: {
   const patch: Record<string, unknown> = {};
   for (const k of [
     "weightKg",
+    "waistCm",
     "bodyFatPct",
     "visceralFat",
     "muscleMassKg",
