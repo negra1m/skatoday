@@ -14,6 +14,7 @@ import {
 } from "@/db/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StreakMap } from "@/components/hud/StreakMap";
+import { WeightGoalCard } from "@/components/hud/WeightGoalCard";
 import { FlowGauge } from "@/components/hud/FlowGauge";
 import { DailyScore } from "@/components/hud/DailyScore";
 import { TaskCard } from "@/components/tasks/TaskCard";
@@ -90,6 +91,8 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <WeightGoalCard current={body?.weightKg ?? null} />
 
       {urgent.length > 0 && (
         <Card>

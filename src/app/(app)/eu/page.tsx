@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BicepsFlexed, Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Users, User } from "lucide-react";
+import { BicepsFlexed, Dumbbell, Footprints, Swords, ListChecks, Activity, Droplet, Target, Users, User } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth";
 import { latestBodyLog, listRuns, listJiu } from "@/db/queries";
 import { getCircuitLogForDate } from "@/db/circuit";
+import { planStatus } from "@/lib/plan";
 import { getEffectiveGoalMl, getWaterLogForDate } from "@/db/water";
 import { listFriends, listPendingIncoming } from "@/db/friends";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +18,13 @@ export default async function EuPage() {
   const jiu = isAdmin ? listJiu(s.profile.id) : [];
   const today = new Date().toISOString().slice(0, 10);
   const circuitDoneToday = !!getCircuitLogForDate(s.profile.id, today)?.done;
+  const plan = planStatus(body?.weightKg ?? null);
+  const planHint =
+    plan.current == null
+      ? "Defina sua meta de peso"
+      : plan.nextMilestone
+        ? `${plan.phase === "corrida" ? "Corrida" : "Caminhada"} · faltam ${plan.toNextKg}kg pra ${plan.nextMilestone.kg}kg`
+        : "Objetivo batido";
   const waterGoalMl = getEffectiveGoalMl(s.profile.id);
   const waterLog = getWaterLogForDate(s.profile.id, today);
   const waterPct = Math.min(100, Math.round(((waterLog?.mlDrunk ?? 0) / waterGoalMl) * 100));
@@ -28,6 +36,13 @@ export default async function EuPage() {
     icon: User,
     label: t("eu.my_card"),
     hint: t("eu.my_card_hint"),
+  });
+
+  sections.push({
+    href: "/plano",
+    icon: Target,
+    label: "Plano",
+    hint: planHint,
   });
 
   // Pro admin, Skate fica acessível via /eu (não está no BottomNav admin)
