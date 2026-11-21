@@ -14,11 +14,13 @@ import {
 } from "@/db/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StreakMap } from "@/components/hud/StreakMap";
+import { WeightGoalCard } from "@/components/hud/WeightGoalCard";
 import { FlowGauge } from "@/components/hud/FlowGauge";
 import { DailyScore } from "@/components/hud/DailyScore";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { listActiveProjectNames } from "@/db/projects";
 import { getCircuitLogForDate } from "@/db/circuit";
+import { getPerformancePhase } from "@/db/plan";
 import { computeStreak, dailyScore } from "@/lib/xp";
 import { todayISO } from "@/lib/utils";
 import { listRoutineItems } from "@/db/routine";
@@ -90,6 +92,8 @@ export default async function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <WeightGoalCard current={body?.weightKg ?? null} phase={getPerformancePhase(session.profile.id)} />
 
       {urgent.length > 0 && (
         <Card>

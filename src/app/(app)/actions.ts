@@ -15,6 +15,9 @@ import {
   updateRun,
   updateSkateSession,
 } from "@/db/mutations";
+import { addBodyPhoto, deleteBodyPhoto } from "@/db/plan";
+import { removeUploadedFile, saveUploadedFile } from "@/lib/uploads";
+import { todayISO } from "@/lib/utils";
 
 async function requireSession() {
   const s = await getCurrentSession();
@@ -78,12 +81,38 @@ export async function deleteTrickAction(formData: FormData) {
   redirect("/skate");
 }
 
+export async function uploadBodyPhotoAction(formData: FormData) {
+  const s = await requireSession();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return;
+  const pose = (formData.get("pose") as "frente" | "lado" | "costas" | "outro") || undefined;
+  const filename = await saveUploadedFile(file);
+  addBodyPhoto({
+    profileId: s.profile.id,
+    date: todayISO(s.user.timezone),
+    filename,
+    pose,
+    caption: (formData.get("caption") as string) || null,
+  });
+  revalidatePath("/corpo");
+}
+
+export async function deleteBodyPhotoAction(formData: FormData) {
+  const s = await requireSession();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const filename = deleteBodyPhoto(s.profile.id, id);
+  if (filename) removeUploadedFile(filename);
+  revalidatePath("/corpo");
+}
+
 export async function updateBodyLogAction(formData: FormData) {
   const s = await requireSession();
   updateBodyLog({
     profileId: s.profile.id,
     bodyLogId: String(formData.get("id") ?? ""),
     weightKg: num(formData.get("weightKg")),
+    waistCm: num(formData.get("waistCm")),
     bodyFatPct: num(formData.get("bodyFatPct")),
     visceralFat: num(formData.get("visceralFat")),
     muscleMassKg: num(formData.get("muscleMassKg")),
